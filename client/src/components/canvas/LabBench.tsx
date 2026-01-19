@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Box, Cylinder, Text, MeshTransmissionMaterial } from '@react-three/drei';
+import { Box, Cylinder, Text, MeshTransmissionMaterial, Sphere } from '@react-three/drei';
 import { Interactive } from '@react-three/xr';
 import * as THREE from 'three';
 
@@ -245,9 +245,10 @@ export function ComputerStation({ position }: { position: [number, number, numbe
          <Box args={[0.8, 0.45, 0.04]}>
            <meshStandardMaterial color="#020617" roughness={0.2} metalness={0.5} />
          </Box>
-         <Plane args={[0.76, 0.41]} position={[0, 0, 0.021]}>
+         <mesh position={[0, 0, 0.021]}>
+           <planeGeometry args={[0.76, 0.41]} />
            <meshStandardMaterial color="#0891b2" emissive="#0891b2" emissiveIntensity={0.8} />
-         </Plane>
+         </mesh>
          <Box args={[0.04, 0.3, 0.04]} position={[0, -0.3, -0.05]}>
            <meshStandardMaterial color="#1e293b" />
          </Box>

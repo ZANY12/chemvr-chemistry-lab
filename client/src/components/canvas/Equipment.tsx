@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Interactive } from '@react-three/xr';
-import { Text, Cylinder, Sphere, Box, Sparkles, MeshTransmissionMaterial } from '@react-three/drei';
+import { Text, Cylinder, Sphere, Box, Sparkles, MeshTransmissionMaterial, Plane } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface DraggableItemProps {
