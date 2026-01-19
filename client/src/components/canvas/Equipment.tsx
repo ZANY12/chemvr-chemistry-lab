@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Interactive } from '@react-three/xr';
-import { Text, Cylinder, Sphere, Box } from '@react-three/drei';
+import { Text, Cylinder, Sphere, Box, Sparkles, Plane } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface DraggableItemProps {
@@ -16,9 +16,12 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
   const meshRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const [selected, setSelected] = useState(false);
+  const [showSparkles, setShowSparkles] = useState(false);
   
   const onSelectStart = () => {
     setSelected(true);
+    setShowSparkles(true);
+    setTimeout(() => setShowSparkles(false), 2000);
     onSelect?.();
   };
   
@@ -34,6 +37,7 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
       onBlur={() => setHovered(false)}
     >
       <group position={initialPos} ref={meshRef}>
+        {showSparkles && <Sparkles count={50} scale={0.5} size={2} speed={0.4} color="#06b6d4" />}
         {hovered && (
           <Text
             position={[0, 0.35, 0]}
@@ -60,17 +64,17 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
               <meshPhysicalMaterial 
                 color="#e2e8f0" 
                 transparent 
-                opacity={0.6} 
-                transmission={0.5} 
+                opacity={0.4} 
+                transmission={0.9} 
                 roughness={0.05}
-                thickness={0.1}
+                thickness={0.05}
                 ior={1.5}
                 reflectivity={1}
                 clearcoat={1}
               />
             </Cylinder>
-            <Cylinder args={[0.07, 0.07, 0.15, 16]} position={[0, 0.08, 0]}>
-               <meshStandardMaterial color={color} transparent opacity={0.8} />
+            <Cylinder args={[0.075, 0.075, 0.15, 16]} position={[0, 0.08, 0]}>
+               <meshStandardMaterial color={color} transparent opacity={0.7} />
             </Cylinder>
           </group>
         )}
@@ -81,8 +85,8 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
                <meshPhysicalMaterial 
                 color="#e2e8f0" 
                 transparent 
-                opacity={0.6} 
-                transmission={0.5} 
+                opacity={0.4} 
+                transmission={0.9} 
                 roughness={0.05}
                 reflectivity={1}
                 clearcoat={1}
@@ -92,15 +96,15 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
               <meshPhysicalMaterial 
                 color="#e2e8f0" 
                 transparent 
-                opacity={0.6} 
-                transmission={0.5} 
+                opacity={0.4} 
+                transmission={0.9} 
                 roughness={0.05}
                 reflectivity={1}
                 clearcoat={1}
               />
             </Sphere>
-             <Sphere args={[0.09, 16, 16]} position={[0, 0.05, 0]} scale={[1, 0.8, 1]}>
-               <meshStandardMaterial color={color} transparent opacity={0.8} />
+             <Sphere args={[0.095, 16, 16]} position={[0, 0.05, 0]} scale={[1, 0.8, 1]}>
+               <meshStandardMaterial color={color} transparent opacity={0.7} />
             </Sphere>
           </group>
         )}
@@ -138,6 +142,127 @@ export function BunsenBurner({ position }: { position: [number, number, number] 
          <meshBasicMaterial color="#3b82f6" transparent opacity={0.8} />
        </mesh>
        <pointLight position={[0, 0.25, 0]} color="#3b82f6" intensity={0.5} distance={1} />
+    </group>
+  );
+}
+
+export function MagneticStirrer({ position }: { position: [number, number, number] }) {
+  const plateRef = useRef<THREE.Group>(null);
+  const [active, setActive] = useState(false);
+
+  useFrame((state, delta) => {
+    if (active && plateRef.current) {
+      plateRef.current.rotation.y += delta * 10;
+    }
+  });
+
+  return (
+    <group position={position}>
+      <Box args={[0.25, 0.08, 0.25]} position={[0, 0.04, 0]}>
+        <meshStandardMaterial color="#f1f5f9" />
+      </Box>
+      <Interactive onSelect={() => setActive(!active)}>
+        <group position={[0, 0.08, 0]} ref={plateRef}>
+          <Cylinder args={[0.08, 0.08, 0.01, 32]}>
+            <meshStandardMaterial color="#e2e8f0" />
+          </Cylinder>
+          {active && <Box args={[0.04, 0.01, 0.01]} position={[0, 0.01, 0]}>
+            <meshStandardMaterial color="#ffffff" />
+          </Box>}
+        </group>
+      </Interactive>
+      <Text position={[0, 0.04, 0.13]} rotation={[-Math.PI / 4, 0, 0]} fontSize={0.02} color="#475569">
+        {active ? "ON" : "STIRRER"}
+      </Text>
+    </group>
+  );
+}
+
+export function VortexMixer({ position }: { position: [number, number, number] }) {
+  const headRef = useRef<THREE.Group>(null);
+  const [active, setActive] = useState(false);
+
+  useFrame((state, delta) => {
+    if (active && headRef.current) {
+      headRef.current.position.x = Math.sin(state.clock.elapsedTime * 50) * 0.005;
+      headRef.current.position.z = Math.cos(state.clock.elapsedTime * 50) * 0.005;
+    }
+  });
+
+  return (
+    <group position={position}>
+      <Cylinder args={[0.1, 0.12, 0.15, 16]} position={[0, 0.075, 0]}>
+        <meshStandardMaterial color="#334155" />
+      </Cylinder>
+      <Interactive onSelect={() => setActive(!active)}>
+        <group position={[0, 0.15, 0]} ref={headRef}>
+          <Cylinder args={[0.04, 0.03, 0.03, 16]}>
+            <meshStandardMaterial color="#1e293b" />
+          </Cylinder>
+        </group>
+      </Interactive>
+      <Text position={[0, 0.05, 0.13]} rotation={[-Math.PI / 4, 0, 0]} fontSize={0.02} color="#f8fafc">
+        VORTEX
+      </Text>
+    </group>
+  );
+}
+
+export function Whiteboard({ position, rotation }: { position: [number, number, number], rotation: [number, number, number] }) {
+  return (
+    <group position={position} rotation={rotation}>
+      <Plane args={[2.5, 1.5]} position={[0, 0, 0]}>
+        <meshPhysicalMaterial 
+          color="#ffffff" 
+          transparent 
+          opacity={0.3} 
+          transmission={0.8}
+          roughness={0.1}
+          metalness={0.1}
+        />
+      </Plane>
+      <Box args={[2.6, 0.05, 0.05]} position={[0, 0.775, 0]}>
+        <meshStandardMaterial color="#475569" />
+      </Box>
+      <Box args={[2.6, 0.05, 0.05]} position={[0, -0.775, 0]}>
+        <meshStandardMaterial color="#475569" />
+      </Box>
+      <group position={[-0.8, 0.3, 0.01]}>
+        <Text fontSize={0.08} color="#1e293b" anchorX="left" anchorY="top">
+          {"Experiment: Synthesis Alpha\n- Heat to 80°C\n- Add Catalyst B\n- Filter precipitate"}
+        </Text>
+      </group>
+      <group position={[0.5, -0.2, 0.01]}>
+        <Box args={[0.4, 0.4, 0.01]}>
+          <meshBasicMaterial color="#3b82f6" wireframe />
+        </Box>
+        <Text position={[0, -0.25, 0]} fontSize={0.04} color="#3b82f6">Molecular Map</Text>
+      </group>
+    </group>
+  );
+}
+
+export function BotanicalSample({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <Cylinder args={[0.05, 0.05, 0.15, 16]} position={[0, 0.075, 0]}>
+        <meshPhysicalMaterial 
+          color="#e2e8f0" 
+          transparent 
+          opacity={0.2} 
+          transmission={0.9} 
+          roughness={0} 
+        />
+      </Cylinder>
+      <group position={[0, 0.05, 0]}>
+        <mesh>
+          <sphereGeometry args={[0.02, 8, 8]} />
+          <meshStandardMaterial color="#22c55e" />
+        </mesh>
+        <Box args={[0.005, 0.08, 0.005]} position={[0, 0.04, 0]}>
+          <meshStandardMaterial color="#15803d" />
+        </Box>
+      </group>
     </group>
   );
 }
