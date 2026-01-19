@@ -14,12 +14,10 @@ interface LabBenchProps {
 export function LabBench({ position, rotation = [0, 0, 0], length = 2.5, showSink = false }: LabBenchProps) {
   return (
     <group position={position} rotation={rotation}>
-      {/* Cabinet Body with subtle beveling/details */}
       <Box args={[length, 0.9, 0.8]} position={[0, 0.45, 0]} castShadow receiveShadow>
         <meshStandardMaterial color="#f3f4f6" roughness={0.3} metalness={0.05} />
       </Box>
 
-      {/* Drawers and Handles */}
       {Array.from({ length: Math.floor(length / 0.8) }).map((_, i) => (
         <group key={i} position={[(i - (Math.floor(length / 0.8) - 1) / 2) * 0.8, 0.45, 0.41]}>
           <Box args={[0.75, 0.85, 0.02]}>
@@ -31,7 +29,6 @@ export function LabBench({ position, rotation = [0, 0, 0], length = 2.5, showSin
         </group>
       ))}
 
-      {/* Countertop with high-gloss finish */}
       <Box args={[length + 0.05, 0.06, 0.9]} position={[0, 0.9, 0]} castShadow receiveShadow>
         <meshStandardMaterial color="#0f172a" roughness={0.05} metalness={0.2} />
       </Box>
@@ -55,7 +52,6 @@ function Sink() {
 
   return (
     <group position={[0.6, 0.9, 0]}>
-      {/* Sink Basin - Deep Metallic */}
       <Box args={[0.6, 0.4, 0.5]} position={[0, -0.2, 0]}>
         <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.1} />
       </Box>
@@ -63,7 +59,6 @@ function Sink() {
         <meshStandardMaterial color="#1e293b" metalness={1} roughness={0.1} />
       </Box>
 
-      {/* Faucet - Chromed Finish */}
       <group position={[0, 0.05, -0.2]}>
         <Cylinder args={[0.03, 0.03, 0.1]} position={[0, 0, 0]}>
           <meshStandardMaterial color="#cbd5e1" metalness={1} roughness={0.05} />
@@ -78,7 +73,6 @@ function Sink() {
           <meshStandardMaterial color="#cbd5e1" metalness={1} roughness={0.05} />
         </Cylinder>
 
-        {/* Interactive Knobs */}
         <Interactive onSelectStart={() => setWaterOn(!waterOn)}>
           <group position={[-0.1, 0.05, 0]}>
             <Sphere args={[0.025, 16, 16]}>
@@ -96,7 +90,6 @@ function Sink() {
           </group>
         </Interactive>
 
-        {/* Advanced Water Stream */}
         {waterOn && (
           <mesh ref={waterRef} position={[0, 0.05, 0.18]}>
             <cylinderGeometry args={[0.01, 0.012, 0.4]} />
@@ -196,7 +189,6 @@ export function Microscope({ position }: { position: [number, number, number] })
 export function SafetyStation({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      {/* Showerhead */}
       <group position={[0, 0, 0]}>
         <Cylinder args={[0.03, 0.03, 2.5]} position={[0, 1.25, 0]}>
            <meshStandardMaterial color="#94a3b8" metalness={1} roughness={0.1} />
@@ -206,7 +198,6 @@ export function SafetyStation({ position }: { position: [number, number, number]
         </Cylinder>
       </group>
       
-      {/* Eyewash Station */}
       <group position={[0, 1.1, 0.4]}>
         <Box args={[0.6, 0.1, 0.4]} position={[0, 0, 0]}>
           <meshStandardMaterial color="#16a34a" roughness={0.3} />
@@ -220,7 +211,6 @@ export function SafetyStation({ position }: { position: [number, number, number]
         <Text position={[0, 0.2, 0]} fontSize={0.06} color="#16a34a" fontWeight="bold">EYE WASH</Text>
       </group>
 
-      {/* Lab Gear Shelf */}
       <group position={[-1, 1.2, 0.3]}>
         <Box args={[1.2, 0.05, 0.5]}>
           <meshStandardMaterial color="#334155" />
@@ -240,7 +230,6 @@ export function ComputerStation({ position }: { position: [number, number, numbe
        <Box args={[1.3, 0.05, 0.7]} position={[0, 0.75, 0]}>
          <meshStandardMaterial color="#0f172a" roughness={0.1} />
        </Box>
-       {/* High-end Monitor */}
        <group position={[0, 1.05, -0.25]}>
          <Box args={[0.8, 0.45, 0.04]}>
            <meshStandardMaterial color="#020617" roughness={0.2} metalness={0.5} />
@@ -249,14 +238,50 @@ export function ComputerStation({ position }: { position: [number, number, numbe
            <planeGeometry args={[0.76, 0.41]} />
            <meshStandardMaterial color="#0891b2" emissive="#0891b2" emissiveIntensity={0.8} />
          </mesh>
-         <Box args={[0.04, 0.3, 0.04]} position={[0, -0.3, -0.05]}>
+         <Box args={[0.04, 0.3, 0.04]} position={[0, -0.2, -0.05]}>
            <meshStandardMaterial color="#1e293b" />
          </Box>
        </group>
-       {/* Mechanical Keyboard */}
        <Box args={[0.5, 0.03, 0.18]} position={[0, 0.77, 0.15]}>
          <meshStandardMaterial color="#1e293b" metalness={0.2} />
        </Box>
+    </group>
+  );
+}
+
+export function LabStool({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <Cylinder args={[0.02, 0.02, 0.6]} position={[0, 0.3, 0]}>
+        <meshStandardMaterial color="#475569" metalness={0.8} />
+      </Cylinder>
+      <Cylinder args={[0.18, 0.18, 0.05]} position={[0, 0.6, 0]}>
+        <meshStandardMaterial color="#1e293b" roughness={0.8} />
+      </Cylinder>
+      <group position={[0, 0, 0]}>
+        {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((angle, i) => (
+          <mesh key={i} position={[Math.cos(angle) * 0.15, 0.05, Math.sin(angle) * 0.15]} rotation={[0, -angle, 0.4]}>
+            <cylinderGeometry args={[0.015, 0.015, 0.4]} />
+            <meshStandardMaterial color="#475569" metalness={0.8} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
+export function TrashBin({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <Cylinder args={[0.15, 0.12, 0.4, 16]} position={[0, 0.2, 0]}>
+        <meshStandardMaterial color="#334155" roughness={0.5} />
+      </Cylinder>
+      <Box args={[0.32, 0.02, 0.32]} position={[0, 0.4, 0]}>
+        <meshStandardMaterial color="#ef4444" />
+      </Box>
+      <Text position={[0, 0.42, 0]} rotation={[-Math.PI / 2, 0, 0]} fontSize={0.03} color="white" fontWeight="bold">
+        HAZARD
+      </Text>
     </group>
   );
 }

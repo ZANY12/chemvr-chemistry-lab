@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { LabRoom } from '../components/canvas/LabRoom';
-import { LabBench } from '../components/canvas/LabBench';
+import { LabBench, LabStool, TrashBin } from '../components/canvas/LabBench';
 import { 
   DraggableItem, 
   BunsenBurner, 
@@ -11,10 +11,9 @@ import {
   BotanicalSample 
 } from '../components/canvas/Equipment';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Sky, ContactShadows } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Sky, ContactShadows, PositionalAudio } from '@react-three/drei';
 import { VRButton, XR, Controllers, Hands } from '@react-three/xr';
 
-// Note: ProfessionalEquipment components were moved to LabBench.tsx for simplicity and to avoid import issues
 import { FumeHood, Microscope, Centrifuge, ComputerStation, SafetyStation } from '../components/canvas/LabBench';
 import { MolecularModel, WATER_MOLECULE, METHANE_MOLECULE } from '../components/canvas/MolecularModel';
 
@@ -70,6 +69,14 @@ export default function Scene() {
             <LabBench position={[0, 0, -2]} rotation={[0, 0, 0]} length={6} showSink={true} />
             <LabBench position={[-3, 0, 0.5]} rotation={[0, Math.PI / 2, 0]} length={5} />
             
+            {/* Lab Seating */}
+            <LabStool position={[0, 0, -1]} />
+            <LabStool position={[1.5, 0, -1]} />
+            <LabStool position={[-2, 0, 0]} />
+
+            {/* Waste Management */}
+            <TrashBin position={[2.5, 0, 3]} />
+
             {/* Professional Equipment Setup */}
             <FumeHood position={[2, 0, -1.9]} />
             <FumeHood position={[4, 0, -1.9]} />
