@@ -58,15 +58,18 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
           <group>
             <Cylinder args={[0.08, 0.08, 0.2, 16]} position={[0, 0.1, 0]} castShadow>
               <meshPhysicalMaterial 
-                color="white" 
+                color="#e2e8f0" 
                 transparent 
-                opacity={0.3} 
-                transmission={0.9} 
-                roughness={0.1}
-                thickness={0.05}
+                opacity={0.6} 
+                transmission={0.5} 
+                roughness={0.05}
+                thickness={0.1}
+                ior={1.5}
+                reflectivity={1}
+                clearcoat={1}
               />
             </Cylinder>
-            <Cylinder args={[0.07, 0.07, 0.1, 16]} position={[0, 0.06, 0]}>
+            <Cylinder args={[0.07, 0.07, 0.15, 16]} position={[0, 0.08, 0]}>
                <meshStandardMaterial color={color} transparent opacity={0.8} />
             </Cylinder>
           </group>
@@ -75,10 +78,26 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
         {type === 'flask' && (
           <group>
             <Cylinder args={[0.02, 0.04, 0.1, 16]} position={[0, 0.2, 0]} castShadow>
-               <meshPhysicalMaterial color="white" transparent opacity={0.3} transmission={0.9} />
+               <meshPhysicalMaterial 
+                color="#e2e8f0" 
+                transparent 
+                opacity={0.6} 
+                transmission={0.5} 
+                roughness={0.05}
+                reflectivity={1}
+                clearcoat={1}
+              />
             </Cylinder>
             <Sphere args={[0.1, 16, 16]} position={[0, 0.05, 0]} scale={[1, 0.8, 1]} castShadow>
-              <meshPhysicalMaterial color="white" transparent opacity={0.3} transmission={0.9} />
+              <meshPhysicalMaterial 
+                color="#e2e8f0" 
+                transparent 
+                opacity={0.6} 
+                transmission={0.5} 
+                roughness={0.05}
+                reflectivity={1}
+                clearcoat={1}
+              />
             </Sphere>
              <Sphere args={[0.09, 16, 16]} position={[0, 0.05, 0]} scale={[1, 0.8, 1]}>
                <meshStandardMaterial color={color} transparent opacity={0.8} />

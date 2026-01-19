@@ -25,14 +25,14 @@ export function LabRoom() {
       {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[floorSize, floorSize]} />
-        <meshStandardMaterial color="#ffffff" roughness={0.1} metalness={0.1} />
+        <meshStandardMaterial color="#f8fafc" roughness={0.2} metalness={0.05} />
       </mesh>
-      <gridHelper args={[floorSize, 20, 0xcccccc, 0xeeeeee]} position={[0, 0.01, 0]} />
+      <gridHelper args={[floorSize, 20, 0xcbd5e1, 0xe2e8f0]} position={[0, 0.01, 0]} />
 
       {/* Ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 4, 0]}>
         <planeGeometry args={[floorSize, floorSize]} />
-        <meshStandardMaterial color="#ffffff" />
+        <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
       {/* Walls */}
@@ -40,7 +40,7 @@ export function LabRoom() {
       <group position={[0, 2, -floorSize / 2]}>
         <mesh receiveShadow>
           <boxGeometry args={[floorSize, 4, 0.2]} />
-          <meshStandardMaterial color="#f0f2f5" />
+          <meshStandardMaterial color="#cbd5e1" />
         </mesh>
         
         <group position={[0, 0.5, 0.15]}>
@@ -71,7 +71,7 @@ export function LabRoom() {
       <group position={[-floorSize / 2, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
         <mesh receiveShadow>
           <boxGeometry args={[floorSize, 4, 0.2]} />
-          <meshStandardMaterial color="#f0f2f5" />
+          <meshStandardMaterial color="#cbd5e1" />
         </mesh>
 
         <group position={[-4, 0.5, 0.15]}>
@@ -111,7 +111,7 @@ export function LabRoom() {
       <group position={[floorSize / 2, 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <mesh receiveShadow>
           <boxGeometry args={[floorSize, 4, 0.2]} />
-          <meshStandardMaterial color="#f0f2f5" />
+          <meshStandardMaterial color="#cbd5e1" />
         </mesh>
       </group>
 
@@ -119,22 +119,22 @@ export function LabRoom() {
       <group position={[0, 3.8, 0]}>
         <mesh rotation={[0, 0, Math.PI / 2]} position={[0, 0, -2]}>
           <cylinderGeometry args={[0.1, 0.1, 20]} />
-          <meshStandardMaterial color="#94a3b8" metalness={0.8} />
+          <meshStandardMaterial color="#64748b" metalness={0.8} />
         </mesh>
         <mesh position={[-3, 0, 0]}>
           <boxGeometry args={[0.5, 0.2, 0.5]} />
-          <meshStandardMaterial color="#64748b" />
+          <meshStandardMaterial color="#475569" />
         </mesh>
       </group>
 
-      {/* Lighting - CRITICAL FIX FOR BLACK SCREEN */}
-      <ambientLight intensity={1.5} />
+      {/* Lighting */}
+      <ambientLight intensity={1.0} />
       
-      <pointLight position={[0, 3, 0]} intensity={2} distance={20} castShadow shadow-mapSize={[1024, 1024]} />
+      <pointLight position={[0, 3, 0]} intensity={1.5} distance={20} castShadow shadow-mapSize={[1024, 1024]} />
       
       <directionalLight 
         position={[5, 10, 5]} 
-        intensity={2} 
+        intensity={1.2} 
         castShadow 
         shadow-mapSize={[1024, 1024]} 
       />
@@ -143,7 +143,7 @@ export function LabRoom() {
         {[[-3, -3], [3, -3], [-3, 3], [3, 3]].map(([x, z], i) => (
           <mesh key={i} position={[x, 0, z]}>
             <boxGeometry args={[2, 0.2, 1]} />
-            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={2} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.5} />
           </mesh>
         ))}
       </group>
