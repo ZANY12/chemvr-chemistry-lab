@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { Box, Cylinder, Sphere } from '@react-three/drei';
+import { Interactive } from '@react-three/xr';
+import * as THREE from 'three';
 
 interface LabBenchProps {
   position: [number, number, number];
@@ -11,12 +14,10 @@ interface LabBenchProps {
 export function LabBench({ position, rotation = [0, 0, 0], length = 2.5, showSink = false }: LabBenchProps) {
   return (
     <group position={position} rotation={rotation}>
-      {/* Cabinet Base */}
       <Box args={[length, 0.9, 0.8]} position={[0, 0.45, 0]} castShadow receiveShadow>
         <meshStandardMaterial color="#f3f4f6" roughness={0.3} />
       </Box>
 
-      {/* Cabinet Doors/Drawers */}
       {Array.from({ length: Math.floor(length) }).map((_, i) => (
         <group key={i} position={[(i - (length - 1) / 2) * 0.8, 0.45, 0.41]}>
           <Box args={[0.7, 0.8, 0.02]}>
@@ -28,7 +29,6 @@ export function LabBench({ position, rotation = [0, 0, 0], length = 2.5, showSin
         </group>
       ))}
 
-      {/* Counter Top */}
       <Box args={[length + 0.1, 0.05, 0.9]} position={[0, 0.9, 0]} castShadow receiveShadow>
         <meshStandardMaterial color="#111827" roughness={0.1} metalness={0.5} />
       </Box>
@@ -72,6 +72,37 @@ export function FumeHood({ position }: { position: [number, number, number] }) {
   );
 }
 
+export function Centrifuge({ position }: { position: [number, number, number] }) {
+  const rotorRef = useRef<THREE.Group>(null);
+  const [running, setRunning] = useState(false);
+
+  useFrame((state, delta) => {
+    if (running && rotorRef.current) {
+      rotorRef.current.rotation.y += delta * 15;
+    }
+  });
+
+  return (
+    <Interactive onSelect={() => setRunning(!running)}>
+      <group position={position}>
+        <Cylinder args={[0.2, 0.2, 0.2]} position={[0, 0.1, 0]}>
+          <meshStandardMaterial color="#e5e7eb" />
+        </Cylinder>
+        <group ref={rotorRef} position={[0, 0.15, 0]}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Cylinder key={i} args={[0.02, 0.02, 0.1]} position={[Math.cos(i * Math.PI / 2) * 0.1, 0, Math.sin(i * Math.PI / 2) * 0.1]} rotation={[0.5, 0, i * Math.PI / 2]}>
+              <meshStandardMaterial color="#9ca3af" />
+            </Cylinder>
+          ))}
+        </group>
+        <Box args={[0.4, 0.05, 0.4]} position={[0, 0.22, 0]}>
+          <meshPhysicalMaterial color="#94a3b8" transparent opacity={0.5} />
+        </Box>
+      </group>
+    </Interactive>
+  );
+}
+
 export function Microscope({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
@@ -99,7 +130,6 @@ export function SafetyStation({ position }: { position: [number, number, number]
           <meshStandardMaterial color="white" roughness={1} />
         </Box>
       </group>
-      {/* Emergency Shower and Eye Wash */}
       <group position={[0.4, 0.5, 0.2]}>
         <Cylinder args={[0.03, 0.03, 2.5]} position={[0, 1, 0]}>
            <meshStandardMaterial color="#9ca3af" metalness={0.9} />
@@ -107,7 +137,6 @@ export function SafetyStation({ position }: { position: [number, number, number]
         <Cylinder args={[0.2, 0.1, 0.1]} position={[0, 2.2, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
            <meshStandardMaterial color="#16a34a" />
         </Cylinder>
-        {/* Eye Wash Station */}
         <group position={[0, 0.6, 0.3]}>
           <Box args={[0.4, 0.1, 0.3]} position={[0, 0, 0]}>
             <meshStandardMaterial color="#16a34a" />
@@ -130,7 +159,6 @@ export function ComputerStation({ position }: { position: [number, number, numbe
        <Box args={[1.2, 0.05, 0.6]} position={[0, 0.75, 0]}>
          <meshStandardMaterial color="#1f2937" />
        </Box>
-       {/* Monitor */}
        <group position={[0, 0.95, -0.2]}>
          <Box args={[0.6, 0.4, 0.02]}>
            <meshStandardMaterial color="#111827" emissive="#06b6d4" emissiveIntensity={0.2} />
@@ -139,7 +167,6 @@ export function ComputerStation({ position }: { position: [number, number, numbe
            <meshStandardMaterial color="#374151" />
          </Box>
        </group>
-       {/* Keyboard */}
        <Box args={[0.4, 0.02, 0.15]} position={[0, 0.77, 0.1]}>
          <meshStandardMaterial color="#111827" />
        </Box>
