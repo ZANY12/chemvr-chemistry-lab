@@ -25,7 +25,7 @@ export function LabRoom() {
       {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[floorSize, floorSize]} />
-        <meshStandardMaterial color="#ffffff" roughness={0.05} metalness={0.05} />
+        <meshStandardMaterial color="#ffffff" roughness={0.1} metalness={0.1} />
       </mesh>
       <gridHelper args={[floorSize, 20, 0xcccccc, 0xeeeeee]} position={[0, 0.01, 0]} />
 
@@ -35,6 +35,7 @@ export function LabRoom() {
         <meshStandardMaterial color="#ffffff" />
       </mesh>
 
+      {/* Walls */}
       {/* Back Wall - Periodic Table */}
       <group position={[0, 2, -floorSize / 2]}>
         <mesh receiveShadow>
@@ -42,13 +43,12 @@ export function LabRoom() {
           <meshStandardMaterial color="#f0f2f5" />
         </mesh>
         
-        {/* Periodic Table Chart */}
         <group position={[0, 0.5, 0.15]}>
           <mesh>
             <boxGeometry args={[6, 3, 0.05]} />
             <meshStandardMaterial color="#ffffff" />
           </mesh>
-          <Text position={[0, 1.3, 0.03]} fontSize={0.15} color="#1e293b" font="/fonts/Inter-Bold.ttf">
+          <Text position={[0, 1.3, 0.03]} fontSize={0.15} color="#1e293b">
             PERIODIC TABLE OF ELEMENTS
           </Text>
           
@@ -74,7 +74,6 @@ export function LabRoom() {
           <meshStandardMaterial color="#f0f2f5" />
         </mesh>
 
-        {/* Realistic pH Scale */}
         <group position={[-4, 0.5, 0.15]}>
           <mesh>
             <boxGeometry args={[3, 3, 0.05]} />
@@ -96,7 +95,6 @@ export function LabRoom() {
           </group>
         </group>
 
-        {/* Formulas Chart */}
         <group position={[0, 0.5, 0.15]}>
           <mesh>
             <boxGeometry args={[3.5, 3, 0.05]} />
@@ -109,26 +107,34 @@ export function LabRoom() {
         </group>
       </group>
 
-      {/* Professional Lighting */}
-      <ambientLight intensity={0.4} />
-      <group position={[0, 3.9, 0]}>
-        {[[-5, -5], [5, -5], [-5, 5], [5, 5], [0, 0]].map(([x, z], i) => (
-          <group key={i} position={[x, 0, z]}>
-            <mesh>
-              <boxGeometry args={[2, 0.1, 1]} />
-              <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1} />
-            </mesh>
-            <pointLight intensity={0.5} distance={12} />
-          </group>
-        ))}
+      {/* Right Wall */}
+      <group position={[floorSize / 2, 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <mesh receiveShadow>
+          <boxGeometry args={[floorSize, 4, 0.2]} />
+          <meshStandardMaterial color="#f0f2f5" />
+        </mesh>
       </group>
 
-      <directionalLight
-        position={[10, 20, 10]}
-        intensity={1.5}
-        castShadow
-        shadow-mapSize={[4096, 4096]}
+      {/* Lighting - CRITICAL FIX FOR BLACK SCREEN */}
+      <ambientLight intensity={1.5} />
+      
+      <pointLight position={[0, 3, 0]} intensity={2} distance={20} castShadow shadow-mapSize={[1024, 1024]} />
+      
+      <directionalLight 
+        position={[5, 10, 5]} 
+        intensity={2} 
+        castShadow 
+        shadow-mapSize={[1024, 1024]} 
       />
+
+      <group position={[0, 3.9, 0]}>
+        {[[-3, -3], [3, -3], [-3, 3], [3, 3]].map(([x, z], i) => (
+          <mesh key={i} position={[x, 0, z]}>
+            <boxGeometry args={[2, 0.2, 1]} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={2} />
+          </mesh>
+        ))}
+      </group>
     </group>
   );
 }
