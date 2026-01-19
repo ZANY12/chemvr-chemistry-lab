@@ -43,7 +43,6 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
             color="white"
             anchorX="center"
             anchorY="middle"
-            billboard
             backgroundColor="#111827"
             backgroundOpacity={0.8}
             padding={0.02}
