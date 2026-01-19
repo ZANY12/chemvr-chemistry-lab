@@ -16,6 +16,7 @@ import { VRButton, XR, Controllers, Hands } from '@react-three/xr';
 
 // Note: ProfessionalEquipment components were moved to LabBench.tsx for simplicity and to avoid import issues
 import { FumeHood, Microscope, Centrifuge, ComputerStation, SafetyStation } from '../components/canvas/LabBench';
+import { MolecularModel, WATER_MOLECULE, METHANE_MOLECULE } from '../components/canvas/MolecularModel';
 
 export default function Scene() {
   const [, setLocation] = useLocation();
@@ -79,6 +80,20 @@ export default function Scene() {
             <ComputerStation position={[-2.8, 0.9, -1.5]} />
             
             <SafetyStation position={[4.5, 0, 4.5]} />
+
+            {/* Molecular Models Visualization */}
+            <group position={[-1.5, 1.2, -1.8]}>
+              <MolecularModel 
+                position={[-0.5, 0, 0]} 
+                scale={0.8}
+                {...WATER_MOLECULE}
+              />
+              <MolecularModel 
+                position={[0.5, 0, 0]} 
+                scale={0.8}
+                {...METHANE_MOLECULE}
+              />
+            </group>
 
             {/* Interactive Equipment */}
             <group position={[0, 0.9, -2]}>
