@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Interactive, useXR } from '@react-three/xr';
+import { Interactive } from '@react-three/xr';
 import { Text, Cylinder, Sphere, Box } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -17,7 +17,6 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
   const [hovered, setHovered] = useState(false);
   const [selected, setSelected] = useState(false);
   
-  // Basic interaction handlers
   const onSelectStart = () => {
     setSelected(true);
     onSelect?.();
@@ -35,7 +34,6 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
       onBlur={() => setHovered(false)}
     >
       <group position={initialPos} ref={meshRef}>
-        {/* Floating Label when hovered */}
         {hovered && (
           <Text
             position={[0, 0.35, 0]}
@@ -43,15 +41,12 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
             color="white"
             anchorX="center"
             anchorY="middle"
-            backgroundColor="#111827"
-            backgroundOpacity={0.8}
-            padding={0.02}
           >
             {name}
+            <meshBasicMaterial color="#111827" transparent opacity={0.8} depthTest={false} />
           </Text>
         )}
 
-        {/* Selection Highlight */}
         {selected && (
           <mesh position={[0, 0, 0]}>
             <sphereGeometry args={[0.15, 16, 16]} />
@@ -71,7 +66,6 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
                 thickness={0.05}
               />
             </Cylinder>
-            {/* Liquid */}
             <Cylinder args={[0.07, 0.07, 0.1, 16]} position={[0, 0.06, 0]}>
                <meshStandardMaterial color={color} transparent opacity={0.8} />
             </Cylinder>
@@ -86,7 +80,6 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
             <Sphere args={[0.1, 16, 16]} position={[0, 0.05, 0]} scale={[1, 0.8, 1]} castShadow>
               <meshPhysicalMaterial color="white" transparent opacity={0.3} transmission={0.9} />
             </Sphere>
-            {/* Liquid */}
              <Sphere args={[0.09, 16, 16]} position={[0, 0.05, 0]} scale={[1, 0.8, 1]}>
                <meshStandardMaterial color={color} transparent opacity={0.8} />
             </Sphere>
@@ -121,7 +114,6 @@ export function BunsenBurner({ position }: { position: [number, number, number] 
        <Cylinder args={[0.015, 0.015, 0.15, 16]} position={[0, 0.12, 0]}>
           <meshStandardMaterial color="#9ca3af" metalness={0.9} />
        </Cylinder>
-       {/* Flame */}
        <mesh ref={flameRef} position={[0, 0.22, 0]}>
          <coneGeometry args={[0.02, 0.08, 8]} />
          <meshBasicMaterial color="#3b82f6" transparent opacity={0.8} />

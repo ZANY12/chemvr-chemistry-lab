@@ -1,6 +1,5 @@
 import React from 'react';
-import { useTexture } from '@react-three/drei';
-import * as THREE from 'three';
+import { Box } from '@react-three/drei';
 
 export function LabRoom() {
   const floorSize = 20;
@@ -63,19 +62,11 @@ export function LabRoom() {
 function RectLight({ pos }: { pos: [number, number, number] }) {
   return (
     <group position={pos}>
-      <Box args={[2, 0.1, 1]}>
+      <mesh>
+        <boxGeometry args={[2, 0.1, 1]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1} />
-      </Box>
+      </mesh>
       <pointLight intensity={0.5} distance={10} />
     </group>
-  );
-}
-
-function Box(props: any) {
-  return (
-    <mesh {...props}>
-      <boxGeometry args={props.args} />
-      {props.children}
-    </mesh>
   );
 }
