@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Box, Cylinder, Sphere } from '@react-three/drei';
+import { Box, Cylinder, Text } from '@react-three/drei';
 import { Interactive } from '@react-three/xr';
 import * as THREE from 'three';
 
@@ -79,7 +79,7 @@ function Sink() {
         </Cylinder>
 
         {/* Hot/Cold Knobs */}
-        <Interactive onSelect={() => setWaterOn(!waterOn)}>
+        <Interactive onSelectStart={() => setWaterOn(!waterOn)}>
           <group position={[-0.08, 0.05, 0]}>
             <Cylinder args={[0.02, 0.02, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
               <meshStandardMaterial color="#ef4444" />
@@ -87,7 +87,7 @@ function Sink() {
             <Text position={[0, 0.05, 0]} fontSize={0.02} color="#ef4444">HOT</Text>
           </group>
         </Interactive>
-        <Interactive onSelect={() => setWaterOn(!waterOn)}>
+        <Interactive onSelectStart={() => setWaterOn(!waterOn)}>
           <group position={[0.08, 0.05, 0]}>
             <Cylinder args={[0.02, 0.02, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
               <meshStandardMaterial color="#3b82f6" />
@@ -135,7 +135,7 @@ export function Centrifuge({ position }: { position: [number, number, number] })
   });
 
   return (
-    <Interactive onSelect={() => setRunning(!running)}>
+    <Interactive onSelectStart={() => setRunning(!running)}>
       <group position={position}>
         <Cylinder args={[0.2, 0.2, 0.2]} position={[0, 0.1, 0]}>
           <meshStandardMaterial color="#e5e7eb" />

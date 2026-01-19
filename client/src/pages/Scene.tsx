@@ -10,10 +10,12 @@ import {
   Whiteboard, 
   BotanicalSample 
 } from '../components/canvas/Equipment';
-import { FumeHood, Microscope, Centrifuge, ComputerStation, SafetyStation } from '../components/canvas/ProfessionalEquipment';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Sky, ContactShadows } from '@react-three/drei';
 import { VRButton, XR, Controllers, Hands } from '@react-three/xr';
+
+// Note: ProfessionalEquipment components were moved to LabBench.tsx for simplicity and to avoid import issues
+import { FumeHood, Microscope, Centrifuge, ComputerStation, SafetyStation } from '../components/canvas/LabBench';
 
 export default function Scene() {
   const [, setLocation] = useLocation();
@@ -60,11 +62,11 @@ export default function Scene() {
           <Sky sunPosition={[100, 20, 100]} />
           <ambientLight intensity={0.5} />
           
-          <XRGroup>
+          <group>
             <LabRoom />
             
             {/* L-Shaped Bench Layout */}
-            <LabBench position={[0, 0, -2]} rotation={[0, 0, 0]} length={6} hasSink={true} />
+            <LabBench position={[0, 0, -2]} rotation={[0, 0, 0]} length={6} showSink={true} />
             <LabBench position={[-3, 0, 0.5]} rotation={[0, Math.PI / 2, 0]} length={5} />
             
             {/* Professional Equipment Setup */}
@@ -121,13 +123,9 @@ export default function Scene() {
               blur={2} 
               far={4.5} 
             />
-          </XRGroup>
+          </group>
         </XR>
       </Canvas>
     </div>
   );
-}
-
-function XRGroup({ children }: { children: React.ReactNode }) {
-  return <group>{children}</group>;
 }
