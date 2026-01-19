@@ -29,42 +29,43 @@ export function Scene({ onInteract }: SceneProps) {
 
             <LabRoom />
 
-            {/* Left Bench */}
-            <LabBench position={[-2, 0, 0]} rotation={[0, Math.PI / 4, 0]} />
+            {/* L-Shaped Workbench Array */}
+            {/* Long side */}
+            <LabBench position={[0, 0, -3]} length={6} showSink={true} />
+            {/* Short side (creating the L) */}
+            <LabBench position={[-3.45, 0, -1.2]} rotation={[0, Math.PI / 2, 0]} length={4} />
+
+            {/* Accurately Aligned Equipment on Main Bench */}
+            <BunsenBurner position={[1, 0.95, -3]} />
             <DraggableItem 
-              position={[-2, 0.95, 0]} 
+              position={[-0.5, 0.95, -3]} 
               color="#ef4444" 
               type="flask" 
-              name="Chemical A" 
-              onSelect={() => onInteract("Chemical A")} 
+              name="HCl (Hydrochloric Acid)" 
+              onSelect={() => onInteract("HCl")} 
             />
             <DraggableItem 
-              position={[-1.8, 0.95, 0.3]} 
+              position={[0, 0.95, -3]} 
               color="#3b82f6" 
               type="beaker" 
-              name="Solvent" 
-              onSelect={() => onInteract("Solvent")}
-            />
-
-            {/* Right Bench */}
-            <LabBench position={[2, 0, 0]} rotation={[0, -Math.PI / 4, 0]} />
-            <BunsenBurner position={[2, 0.95, 0]} />
-            <DraggableItem 
-              position={[1.8, 0.95, 0.3]} 
-              color="#22c55e" 
-              type="cube" 
-              name="Sample 12" 
-              onSelect={() => onInteract("Sample 12")}
+              name="Distilled Water" 
+              onSelect={() => onInteract("Distilled Water")}
             />
             
-            {/* Center Bench (Main) */}
-            <LabBench position={[0, 0, -2]} />
-             <DraggableItem 
-              position={[0, 0.95, -2]} 
+            {/* Equipment on Side Bench */}
+            <DraggableItem 
+              position={[-3.45, 0.95, -1]} 
               color="#a855f7" 
               type="beaker" 
-              name="Reaction Mix" 
-              onSelect={() => onInteract("Reaction Mix")}
+              name="Unknown Solution" 
+              onSelect={() => onInteract("Unknown Solution")}
+            />
+            <DraggableItem 
+              position={[-3.45, 0.95, 0]} 
+              color="#22c55e" 
+              type="cube" 
+              name="Solid Reagent" 
+              onSelect={() => onInteract("Solid Reagent")}
             />
 
           </Suspense>

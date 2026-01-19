@@ -38,12 +38,15 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
         {/* Floating Label when hovered */}
         {hovered && (
           <Text
-            position={[0, 0.3, 0]}
-            fontSize={0.08}
+            position={[0, 0.35, 0]}
+            fontSize={0.06}
             color="white"
             anchorX="center"
             anchorY="middle"
             billboard
+            backgroundColor="#111827"
+            backgroundOpacity={0.8}
+            padding={0.02}
           >
             {name}
           </Text>
