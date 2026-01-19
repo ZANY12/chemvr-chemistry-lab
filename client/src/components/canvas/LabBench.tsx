@@ -39,18 +39,70 @@ export function LabBench({ position, rotation = [0, 0, 0], length = 2.5, showSin
 }
 
 function Sink() {
+  const [waterOn, setWaterOn] = useState(false);
+  const waterRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (waterRef.current && waterOn) {
+      waterRef.current.scale.x = 1 + Math.sin(state.clock.elapsedTime * 20) * 0.1;
+      waterRef.current.scale.z = 1 + Math.sin(state.clock.elapsedTime * 20) * 0.1;
+    }
+  });
+
   return (
     <group position={[0.6, 0.9, 0]}>
+      {/* Sink Basin */}
       <Box args={[0.6, 0.4, 0.5]} position={[0, -0.2, 0]}>
-        <meshStandardMaterial color="#374151" metalness={0.8} />
+        <meshStandardMaterial color="#374151" metalness={0.8} roughness={0.2} />
       </Box>
+      <Box args={[0.55, 0.01, 0.45]} position={[0, -0.39, 0]}>
+        <meshStandardMaterial color="#1f2937" />
+      </Box>
+
+      {/* Faucet */}
       <group position={[0, 0.05, -0.2]}>
+        {/* Base */}
+        <Cylinder args={[0.03, 0.03, 0.1]} position={[0, 0, 0]}>
+          <meshStandardMaterial color="#9ca3af" metalness={0.9} />
+        </Cylinder>
+        {/* Main Pipe */}
         <Cylinder args={[0.02, 0.02, 0.3]} position={[0, 0.15, 0]}>
           <meshStandardMaterial color="#9ca3af" metalness={0.9} />
         </Cylinder>
-        <Cylinder args={[0.02, 0.02, 0.1]} position={[0, 0.3, 0.05]} rotation={[Math.PI / 2, 0, 0]}>
+        {/* Neck */}
+        <Cylinder args={[0.02, 0.02, 0.15]} position={[0, 0.3, 0.075]} rotation={[Math.PI / 2, 0, 0]}>
           <meshStandardMaterial color="#9ca3af" metalness={0.9} />
         </Cylinder>
+        {/* Spout */}
+        <Cylinder args={[0.02, 0.02, 0.05]} position={[0, 0.275, 0.15]}>
+          <meshStandardMaterial color="#9ca3af" metalness={0.9} />
+        </Cylinder>
+
+        {/* Hot/Cold Knobs */}
+        <Interactive onSelect={() => setWaterOn(!waterOn)}>
+          <group position={[-0.08, 0.05, 0]}>
+            <Cylinder args={[0.02, 0.02, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
+              <meshStandardMaterial color="#ef4444" />
+            </Cylinder>
+            <Text position={[0, 0.05, 0]} fontSize={0.02} color="#ef4444">HOT</Text>
+          </group>
+        </Interactive>
+        <Interactive onSelect={() => setWaterOn(!waterOn)}>
+          <group position={[0.08, 0.05, 0]}>
+            <Cylinder args={[0.02, 0.02, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
+              <meshStandardMaterial color="#3b82f6" />
+            </Cylinder>
+            <Text position={[0, 0.05, 0]} fontSize={0.02} color="#3b82f6">COLD</Text>
+          </group>
+        </Interactive>
+
+        {/* Water Stream */}
+        {waterOn && (
+          <mesh ref={waterRef} position={[0, 0.05, 0.15]}>
+            <cylinderGeometry args={[0.01, 0.015, 0.4]} />
+            <meshStandardMaterial color="#bae6fd" transparent opacity={0.6} />
+          </mesh>
+        )}
       </group>
     </group>
   );
