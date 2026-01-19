@@ -115,6 +115,18 @@ export function LabRoom() {
         </mesh>
       </group>
 
+      {/* Ceiling Vents and Pipes */}
+      <group position={[0, 3.8, 0]}>
+        <mesh rotation={[0, 0, Math.PI / 2]} position={[0, 0, -2]}>
+          <cylinderGeometry args={[0.1, 0.1, 20]} />
+          <meshStandardMaterial color="#94a3b8" metalness={0.8} />
+        </mesh>
+        <mesh position={[-3, 0, 0]}>
+          <boxGeometry args={[0.5, 0.2, 0.5]} />
+          <meshStandardMaterial color="#64748b" />
+        </mesh>
+      </group>
+
       {/* Lighting - CRITICAL FIX FOR BLACK SCREEN */}
       <ambientLight intensity={1.5} />
       
