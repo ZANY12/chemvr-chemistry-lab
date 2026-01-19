@@ -99,6 +99,50 @@ export function SafetyStation({ position }: { position: [number, number, number]
           <meshStandardMaterial color="white" roughness={1} />
         </Box>
       </group>
+      {/* Emergency Shower and Eye Wash */}
+      <group position={[0.4, 0.5, 0.2]}>
+        <Cylinder args={[0.03, 0.03, 2.5]} position={[0, 1, 0]}>
+           <meshStandardMaterial color="#9ca3af" metalness={0.9} />
+        </Cylinder>
+        <Cylinder args={[0.2, 0.1, 0.1]} position={[0, 2.2, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
+           <meshStandardMaterial color="#16a34a" />
+        </Cylinder>
+        {/* Eye Wash Station */}
+        <group position={[0, 0.6, 0.3]}>
+          <Box args={[0.4, 0.1, 0.3]} position={[0, 0, 0]}>
+            <meshStandardMaterial color="#16a34a" />
+          </Box>
+          <Cylinder args={[0.01, 0.01, 0.1]} position={[-0.1, 0.1, 0]}>
+            <meshStandardMaterial color="#9ca3af" />
+          </Cylinder>
+          <Cylinder args={[0.01, 0.01, 0.1]} position={[0.1, 0.1, 0]}>
+            <meshStandardMaterial color="#9ca3af" />
+          </Cylinder>
+        </group>
+      </group>
+    </group>
+  );
+}
+
+export function ComputerStation({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+       <Box args={[1.2, 0.05, 0.6]} position={[0, 0.75, 0]}>
+         <meshStandardMaterial color="#1f2937" />
+       </Box>
+       {/* Monitor */}
+       <group position={[0, 0.95, -0.2]}>
+         <Box args={[0.6, 0.4, 0.02]}>
+           <meshStandardMaterial color="#111827" emissive="#06b6d4" emissiveIntensity={0.2} />
+         </Box>
+         <Box args={[0.02, 0.15, 0.02]} position={[0, -0.2, 0]}>
+           <meshStandardMaterial color="#374151" />
+         </Box>
+       </group>
+       {/* Keyboard */}
+       <Box args={[0.4, 0.02, 0.15]} position={[0, 0.77, 0.1]}>
+         <meshStandardMaterial color="#111827" />
+       </Box>
     </group>
   );
 }
