@@ -1,0 +1,177 @@
+Role & Goal
+You are a senior WebXR + Three.js engineer and UX designer specializing in immersive VR simulations.
+Build a WebXR-based Virtual Reality Chemistry Laboratory using Three.js that runs in modern browsers and VR headsets (Meta Quest, HTC Vive, etc.).
+
+Core Requirements
+
+1. Scene & Environment
+
+Create a realistic indoor chemistry laboratory room
+
+Dimensions similar to a real lab (rectangular room, high ceiling)
+
+Include:
+
+Lab tables / workbenches arranged symmetrically
+
+White tiled floor with slight reflection
+
+Neutral walls with safety posters and periodic table
+
+Ceiling lights (fluorescent panels)
+
+Windows or ventilation hoods
+
+Use physically based rendering (PBR) where possible
+
+Add subtle ambient sounds (optional)
+
+2. Laboratory Furniture & Equipment
+
+Each lab table should include:
+
+Sink with water tap
+
+Bunsen burner
+
+Beakers (various sizes)
+
+Test tubes and test tube rack
+
+Conical flasks (Erlenmeyer)
+
+Graduated cylinders
+
+Pipettes and droppers
+
+Chemical bottles with labels (HCl, NaOH, H₂SO₄, etc.)
+
+Digital balance (scale)
+
+Thermometer
+
+Equipment should:
+
+Be 3D models created with basic geometry or placeholders
+
+Be scaled realistically
+
+Be positioned naturally on tables
+
+3. WebXR & VR Interaction
+
+Enable WebXR immersive-vr mode
+
+Support:
+
+VR controllers (ray-based interaction)
+
+Grabbing and releasing objects
+
+Teleportation or smooth locomotion
+
+Allow users to:
+
+Pick up lab equipment
+
+Place objects on tables
+
+Pour liquid from one container to another (visual simulation)
+
+4. User Interface (UI / UX)
+
+Design a clean, modern VR UI:
+
+Floating UI panels inside the lab
+
+Minimalistic, science-themed design
+
+Include:
+
+“Start Experiment” panel
+
+Equipment info panel (appears when object is selected)
+
+Reset Lab button
+
+Safety instructions panel
+
+UI should:
+
+Be readable in VR
+
+Face the user
+
+Use Three.js planes or CSS3D objects
+
+5. Lighting & Visual Quality
+
+Use:
+
+Ambient light for base illumination
+
+Directional lights for realism
+
+Soft shadows
+
+Objects should cast and receive shadows
+
+Slight bloom or tone mapping if possible
+
+6. Code Architecture
+
+Use Three.js ES modules
+
+Clean folder structure:
+
+/scene
+
+/objects
+
+/ui
+
+/xr
+
+Separate logic for:
+
+Scene setup
+
+XR controller handling
+
+Object interaction
+
+UI
+
+7. Performance & Compatibility
+
+Optimize for VR performance
+
+Avoid heavy poly counts
+
+Use instancing where possible
+
+Ensure it runs smoothly on standalone VR headsets
+
+Deliverables
+
+Full working Three.js + WebXR project
+
+Well-commented code
+
+Clear explanation of:
+
+How the scene is built
+
+How VR interaction works
+
+How to extend the lab with experiments
+
+Important Notes
+
+Prioritize realistic lab layout and immersive UX
+
+The result should feel like a real chemistry lab, not a demo scene
+
+Use placeholder assets if needed but keep the structure realistic
+
+Start by building the complete lab room and furniture, then layer interactivity and UI.
