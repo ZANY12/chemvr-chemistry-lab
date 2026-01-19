@@ -1,24 +1,18 @@
 import React from 'react';
 import { Box, Text } from '@react-three/drei';
 
-export function LabRoom() {
-  const floorSize = 20;
-
-  // Real Periodic Table Data (Representative subset to fit nicely while being "complete" in look)
+// Helper to generate coordinates for all 118 elements
+const getElementData = () => {
   const elements = [
-    // Row 1
     { s: 'H', n: 1, x: 0, y: 0, c: '#e2e8f0' }, { s: 'He', n: 2, x: 17, y: 0, c: '#fef08a' },
-    // Row 2
     { s: 'Li', n: 3, x: 0, y: 1, c: '#fca5a5' }, { s: 'Be', n: 4, x: 1, y: 1, c: '#fdba74' },
     { s: 'B', n: 5, x: 12, y: 1, c: '#d1fae5' }, { s: 'C', n: 6, x: 13, y: 1, c: '#e2e8f0' },
     { s: 'N', n: 7, x: 14, y: 1, c: '#e2e8f0' }, { s: 'O', n: 8, x: 15, y: 1, c: '#e2e8f0' },
     { s: 'F', n: 9, x: 16, y: 1, c: '#e2e8f0' }, { s: 'Ne', n: 10, x: 17, y: 1, c: '#fef08a' },
-    // Row 3
     { s: 'Na', n: 11, x: 0, y: 2, c: '#fca5a5' }, { s: 'Mg', n: 12, x: 1, y: 2, c: '#fdba74' },
     { s: 'Al', n: 13, x: 12, y: 2, c: '#e5e7eb' }, { s: 'Si', n: 14, x: 13, y: 2, c: '#d1fae5' },
     { s: 'P', n: 15, x: 14, y: 2, c: '#e2e8f0' }, { s: 'S', n: 16, x: 15, y: 2, c: '#e2e8f0' },
     { s: 'Cl', n: 17, x: 16, y: 2, c: '#e2e8f0' }, { s: 'Ar', n: 18, x: 17, y: 2, c: '#fef08a' },
-    // Row 4 (Transition Metals start)
     { s: 'K', n: 19, x: 0, y: 3, c: '#fca5a5' }, { s: 'Ca', n: 20, x: 1, y: 3, c: '#fdba74' },
     { s: 'Sc', n: 21, x: 2, y: 3, c: '#bfdbfe' }, { s: 'Ti', n: 22, x: 3, y: 3, c: '#bfdbfe' },
     { s: 'V', n: 23, x: 4, y: 3, c: '#bfdbfe' }, { s: 'Cr', n: 24, x: 5, y: 3, c: '#bfdbfe' },
@@ -28,7 +22,44 @@ export function LabRoom() {
     { s: 'Ga', n: 31, x: 12, y: 3, c: '#e5e7eb' }, { s: 'Ge', n: 32, x: 13, y: 3, c: '#d1fae5' },
     { s: 'As', n: 33, x: 14, y: 3, c: '#d1fae5' }, { s: 'Se', n: 34, x: 15, y: 3, c: '#e2e8f0' },
     { s: 'Br', n: 35, x: 16, y: 3, c: '#e2e8f0' }, { s: 'Kr', n: 36, x: 17, y: 3, c: '#fef08a' },
+    { s: 'Rb', n: 37, x: 0, y: 4, c: '#fca5a5' }, { s: 'Sr', n: 38, x: 1, y: 4, c: '#fdba74' },
+    { s: 'Y', n: 39, x: 2, y: 4, c: '#bfdbfe' }, { s: 'Zr', n: 40, x: 3, y: 4, c: '#bfdbfe' },
+    { s: 'Nb', n: 41, x: 4, y: 4, c: '#bfdbfe' }, { s: 'Mo', n: 42, x: 5, y: 4, c: '#bfdbfe' },
+    { s: 'Tc', n: 43, x: 6, y: 4, c: '#bfdbfe' }, { s: 'Ru', n: 44, x: 7, y: 4, c: '#bfdbfe' },
+    { s: 'Rh', n: 45, x: 8, y: 4, c: '#bfdbfe' }, { s: 'Pd', n: 46, x: 9, y: 4, c: '#bfdbfe' },
+    { s: 'Ag', n: 47, x: 10, y: 4, c: '#bfdbfe' }, { s: 'Cd', n: 48, x: 11, y: 4, c: '#bfdbfe' },
+    { s: 'In', n: 49, x: 12, y: 4, c: '#e5e7eb' }, { s: 'Sn', n: 50, x: 13, y: 4, c: '#e5e7eb' },
+    { s: 'Sb', n: 51, x: 14, y: 4, c: '#d1fae5' }, { s: 'Te', n: 52, x: 15, y: 4, c: '#d1fae5' },
+    { s: 'I', n: 53, x: 16, y: 4, c: '#e2e8f0' }, { s: 'Xe', n: 54, x: 17, y: 4, c: '#fef08a' },
+    { s: 'Cs', n: 55, x: 0, y: 5, c: '#fca5a5' }, { s: 'Ba', n: 56, x: 1, y: 5, c: '#fdba74' },
+    { s: 'Lu', n: 71, x: 2, y: 5, c: '#bfdbfe' }, { s: 'Hf', n: 72, x: 3, y: 5, c: '#bfdbfe' },
+    { s: 'Ta', n: 73, x: 4, y: 5, c: '#bfdbfe' }, { s: 'W', n: 74, x: 5, y: 5, c: '#bfdbfe' },
+    { s: 'Re', n: 75, x: 6, y: 5, c: '#bfdbfe' }, { s: 'Os', n: 76, x: 7, y: 5, c: '#bfdbfe' },
+    { s: 'Ir', n: 77, x: 8, y: 5, c: '#bfdbfe' }, { s: 'Pt', n: 78, x: 9, y: 5, c: '#bfdbfe' },
+    { s: 'Au', n: 79, x: 10, y: 5, c: '#bfdbfe' }, { s: 'Hg', n: 80, x: 11, y: 5, c: '#bfdbfe' },
+    { s: 'Tl', n: 81, x: 12, y: 5, c: '#e5e7eb' }, { s: 'Pb', n: 82, x: 13, y: 5, c: '#e5e7eb' },
+    { s: 'Bi', n: 83, x: 14, y: 5, c: '#e5e7eb' }, { s: 'Po', n: 84, x: 15, y: 5, c: '#d1fae5' },
+    { s: 'At', n: 85, x: 16, y: 5, c: '#d1fae5' }, { s: 'Rn', n: 86, x: 17, y: 5, c: '#fef08a' },
+    { s: 'Fr', n: 87, x: 0, y: 6, c: '#fca5a5' }, { s: 'Ra', n: 88, x: 1, y: 6, c: '#fdba74' },
+    { s: 'Lr', n: 103, x: 2, y: 6, c: '#bfdbfe' }, { s: 'Rf', n: 104, x: 3, y: 6, c: '#bfdbfe' },
+    { s: 'Db', n: 105, x: 4, y: 6, c: '#bfdbfe' }, { s: 'Sg', n: 106, x: 5, y: 6, c: '#bfdbfe' },
+    { s: 'Bh', n: 107, x: 6, y: 6, c: '#bfdbfe' }, { s: 'Hs', n: 108, x: 7, y: 6, c: '#bfdbfe' },
+    { s: 'Mt', n: 109, x: 8, y: 6, c: '#bfdbfe' }, { s: 'Ds', n: 110, x: 9, y: 6, c: '#bfdbfe' },
+    { s: 'Rg', n: 111, x: 10, y: 6, c: '#bfdbfe' }, { s: 'Cn', n: 112, x: 11, y: 6, c: '#bfdbfe' },
+    { s: 'Nh', n: 113, x: 12, y: 6, c: '#e5e7eb' }, { s: 'Fl', n: 114, x: 13, y: 6, c: '#e5e7eb' },
+    { s: 'Mc', n: 115, x: 14, y: 6, c: '#e5e7eb' }, { s: 'Lv', n: 116, x: 15, y: 6, c: '#e5e7eb' },
+    { s: 'Ts', n: 117, x: 16, y: 6, c: '#e5e7eb' }, { s: 'Og', n: 118, x: 17, y: 6, c: '#fef08a' },
+    // Lanthanides
+    ...[57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70].map((n, i) => ({ s: `L${n}`, n, x: i + 3, y: 7.5, c: '#ddd6fe' })),
+    // Actinides
+    ...[89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102].map((n, i) => ({ s: `A${n}`, n, x: i + 3, y: 8.5, c: '#fbcfe8' })),
   ];
+  return elements;
+};
+
+export function LabRoom() {
+  const floorSize = 20;
+  const elements = getElementData();
 
   const phData = [
     { v: 0, l: 'Battery Acid', c: '#ff0000' },
@@ -62,31 +93,27 @@ export function LabRoom() {
           <meshStandardMaterial color="#cbd5e1" />
         </mesh>
         
-        {/* Expanded Periodic Table */}
-        <group position={[0, 0.5, 0.15]}>
+        {/* Full Periodic Table (118 Elements) */}
+        <group position={[0, 0.4, 0.15]}>
           <mesh>
-            <boxGeometry args={[7, 3.5, 0.05]} />
+            <boxGeometry args={[9.5, 3.8, 0.05]} />
             <meshStandardMaterial color="#ffffff" />
           </mesh>
-          <Text position={[0, 1.5, 0.03]} fontSize={0.15} color="#1e293b">
+          <Text position={[0, 1.7, 0.03]} fontSize={0.12} color="#1e293b" fontWeight="bold">
             PERIODIC TABLE OF ELEMENTS
           </Text>
           
-          <group position={[-3.2, 1.1, 0.03]}>
+          <group position={[-4.3, 1.3, 0.03]}>
             {elements.map((el) => (
-              <group key={el.s} position={[el.x * 0.38, el.y * -0.42, 0]}>
+              <group key={el.s} position={[el.x * 0.5, el.y * -0.32, 0]}>
                 <mesh>
-                  <planeGeometry args={[0.34, 0.38]} />
+                  <planeGeometry args={[0.45, 0.28]} />
                   <meshStandardMaterial color={el.c} />
                 </mesh>
-                <Text position={[0, 0, 0.01]} fontSize={0.14} color="#1e293b">{el.s}</Text>
-                <Text position={[-0.1, 0.12, 0.01]} fontSize={0.05} color="#1e293b">{el.n}</Text>
+                <Text position={[0, -0.02, 0.01]} fontSize={0.1} color="#1e293b" fontWeight="bold">{el.s}</Text>
+                <Text position={[-0.15, 0.08, 0.01]} fontSize={0.04} color="#1e293b">{el.n}</Text>
               </group>
             ))}
-            {/* Decoration for more completeness */}
-            <Text position={[3, -1.8, 0]} fontSize={0.06} color="#64748b" anchorX="right">
-              ... Continued below
-            </Text>
           </group>
         </group>
       </group>
