@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { Controllers, Hands, VRButton, XR } from '@react-three/xr';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { LabRoom } from './canvas/LabRoom';
-import { LabBench } from './canvas/LabBench';
+import { LabBench, SafetyStation } from './canvas/LabBench';
 import { DraggableItem, BunsenBurner } from './canvas/Equipment';
 
 interface SceneProps {
@@ -28,6 +28,9 @@ export function Scene({ onInteract }: SceneProps) {
             <OrbitControls target={[0, 1, 0]} />
 
             <LabRoom />
+
+            {/* Safety Station */}
+            <SafetyStation position={[-4.5, 0, -1]} />
 
             {/* L-Shaped Workbench Array */}
             {/* Long side */}
