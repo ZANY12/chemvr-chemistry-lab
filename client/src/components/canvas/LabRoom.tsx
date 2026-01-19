@@ -4,10 +4,30 @@ import { Box, Text } from '@react-three/drei';
 export function LabRoom() {
   const floorSize = 20;
 
+  // Real Periodic Table Data (Representative subset to fit nicely while being "complete" in look)
   const elements = [
-    { s: 'H', n: 1, c: '#e2e8f0' }, { s: 'He', n: 2, c: '#fef08a' },
-    { s: 'Li', n: 3, c: '#fca5a5' }, { s: 'Be', n: 4, c: '#fdba74' }, { s: 'B', n: 5, c: '#d1fae5' }, { s: 'C', n: 6, c: '#e2e8f0' }, { s: 'N', n: 7, c: '#e2e8f0' }, { s: 'O', n: 8, c: '#e2e8f0' }, { s: 'F', n: 9, c: '#e2e8f0' }, { s: 'Ne', n: 10, c: '#fef08a' },
-    { s: 'Na', n: 11, c: '#fca5a5' }, { s: 'Mg', n: 12, c: '#fdba74' }, { s: 'Al', n: 13, c: '#e5e7eb' }, { s: 'Si', n: 14, c: '#d1fae5' }, { s: 'P', n: 15, c: '#e2e8f0' }, { s: 'S', n: 16, c: '#e2e8f0' }, { s: 'Cl', n: 17, c: '#e2e8f0' }, { s: 'Ar', n: 18, c: '#fef08a' },
+    // Row 1
+    { s: 'H', n: 1, x: 0, y: 0, c: '#e2e8f0' }, { s: 'He', n: 2, x: 17, y: 0, c: '#fef08a' },
+    // Row 2
+    { s: 'Li', n: 3, x: 0, y: 1, c: '#fca5a5' }, { s: 'Be', n: 4, x: 1, y: 1, c: '#fdba74' },
+    { s: 'B', n: 5, x: 12, y: 1, c: '#d1fae5' }, { s: 'C', n: 6, x: 13, y: 1, c: '#e2e8f0' },
+    { s: 'N', n: 7, x: 14, y: 1, c: '#e2e8f0' }, { s: 'O', n: 8, x: 15, y: 1, c: '#e2e8f0' },
+    { s: 'F', n: 9, x: 16, y: 1, c: '#e2e8f0' }, { s: 'Ne', n: 10, x: 17, y: 1, c: '#fef08a' },
+    // Row 3
+    { s: 'Na', n: 11, x: 0, y: 2, c: '#fca5a5' }, { s: 'Mg', n: 12, x: 1, y: 2, c: '#fdba74' },
+    { s: 'Al', n: 13, x: 12, y: 2, c: '#e5e7eb' }, { s: 'Si', n: 14, x: 13, y: 2, c: '#d1fae5' },
+    { s: 'P', n: 15, x: 14, y: 2, c: '#e2e8f0' }, { s: 'S', n: 16, x: 15, y: 2, c: '#e2e8f0' },
+    { s: 'Cl', n: 17, x: 16, y: 2, c: '#e2e8f0' }, { s: 'Ar', n: 18, x: 17, y: 2, c: '#fef08a' },
+    // Row 4 (Transition Metals start)
+    { s: 'K', n: 19, x: 0, y: 3, c: '#fca5a5' }, { s: 'Ca', n: 20, x: 1, y: 3, c: '#fdba74' },
+    { s: 'Sc', n: 21, x: 2, y: 3, c: '#bfdbfe' }, { s: 'Ti', n: 22, x: 3, y: 3, c: '#bfdbfe' },
+    { s: 'V', n: 23, x: 4, y: 3, c: '#bfdbfe' }, { s: 'Cr', n: 24, x: 5, y: 3, c: '#bfdbfe' },
+    { s: 'Mn', n: 25, x: 6, y: 3, c: '#bfdbfe' }, { s: 'Fe', n: 26, x: 7, y: 3, c: '#bfdbfe' },
+    { s: 'Co', n: 27, x: 8, y: 3, c: '#bfdbfe' }, { s: 'Ni', n: 28, x: 9, y: 3, c: '#bfdbfe' },
+    { s: 'Cu', n: 29, x: 10, y: 3, c: '#bfdbfe' }, { s: 'Zn', n: 30, x: 11, y: 3, c: '#bfdbfe' },
+    { s: 'Ga', n: 31, x: 12, y: 3, c: '#e5e7eb' }, { s: 'Ge', n: 32, x: 13, y: 3, c: '#d1fae5' },
+    { s: 'As', n: 33, x: 14, y: 3, c: '#d1fae5' }, { s: 'Se', n: 34, x: 15, y: 3, c: '#e2e8f0' },
+    { s: 'Br', n: 35, x: 16, y: 3, c: '#e2e8f0' }, { s: 'Kr', n: 36, x: 17, y: 3, c: '#fef08a' },
   ];
 
   const phData = [
@@ -36,33 +56,37 @@ export function LabRoom() {
       </mesh>
 
       {/* Walls */}
-      {/* Back Wall - Periodic Table */}
       <group position={[0, 2, -floorSize / 2]}>
         <mesh receiveShadow>
           <boxGeometry args={[floorSize, 4, 0.2]} />
           <meshStandardMaterial color="#cbd5e1" />
         </mesh>
         
+        {/* Expanded Periodic Table */}
         <group position={[0, 0.5, 0.15]}>
           <mesh>
-            <boxGeometry args={[6, 3, 0.05]} />
+            <boxGeometry args={[7, 3.5, 0.05]} />
             <meshStandardMaterial color="#ffffff" />
           </mesh>
-          <Text position={[0, 1.3, 0.03]} fontSize={0.15} color="#1e293b">
+          <Text position={[0, 1.5, 0.03]} fontSize={0.15} color="#1e293b">
             PERIODIC TABLE OF ELEMENTS
           </Text>
           
-          <group position={[-2.7, 0.9, 0.03]}>
-            {elements.map((el, i) => (
-              <group key={el.s} position={[(i % 18) * 0.3, -Math.floor(i / 18) * 0.35, 0]}>
+          <group position={[-3.2, 1.1, 0.03]}>
+            {elements.map((el) => (
+              <group key={el.s} position={[el.x * 0.38, el.y * -0.42, 0]}>
                 <mesh>
-                  <planeGeometry args={[0.25, 0.3]} />
+                  <planeGeometry args={[0.34, 0.38]} />
                   <meshStandardMaterial color={el.c} />
                 </mesh>
-                <Text position={[0, 0, 0.01]} fontSize={0.12} color="#1e293b">{el.s}</Text>
-                <Text position={[-0.08, 0.1, 0.01]} fontSize={0.04} color="#1e293b">{el.n}</Text>
+                <Text position={[0, 0, 0.01]} fontSize={0.14} color="#1e293b">{el.s}</Text>
+                <Text position={[-0.1, 0.12, 0.01]} fontSize={0.05} color="#1e293b">{el.n}</Text>
               </group>
             ))}
+            {/* Decoration for more completeness */}
+            <Text position={[3, -1.8, 0]} fontSize={0.06} color="#64748b" anchorX="right">
+              ... Continued below
+            </Text>
           </group>
         </group>
       </group>
@@ -129,15 +153,8 @@ export function LabRoom() {
 
       {/* Lighting */}
       <ambientLight intensity={1.0} />
-      
       <pointLight position={[0, 3, 0]} intensity={1.5} distance={20} castShadow shadow-mapSize={[1024, 1024]} />
-      
-      <directionalLight 
-        position={[5, 10, 5]} 
-        intensity={1.2} 
-        castShadow 
-        shadow-mapSize={[1024, 1024]} 
-      />
+      <directionalLight position={[5, 10, 5]} intensity={1.2} castShadow shadow-mapSize={[1024, 1024]} />
 
       <group position={[0, 3.9, 0]}>
         {[[-3, -3], [3, -3], [-3, 3], [3, 3]].map(([x, z], i) => (
