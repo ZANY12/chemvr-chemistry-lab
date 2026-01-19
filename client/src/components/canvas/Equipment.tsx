@@ -29,6 +29,28 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
     setSelected(false);
   };
 
+  const GlassMaterial = () => (
+    <MeshTransmissionMaterial 
+      backside
+      samples={16}
+      thickness={0.15}
+      chromaticAberration={0.05}
+      anisotropy={0.1}
+      distortion={0.1}
+      distortionScale={0.1}
+      temporalDistortion={0.1}
+      clearcoat={1}
+      clearcoatRoughness={0}
+      transmission={0.95}
+      ior={1.5}
+      reflectivity={0.5}
+      attenuationDistance={0.5}
+      attenuationColor="#ffffff"
+      color="#ffffff"
+      roughness={0}
+    />
+  );
+
   return (
     <Interactive 
       onSelectStart={onSelectStart} 
@@ -60,22 +82,11 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
 
         {type === 'beaker' && (
           <group>
+            {/* Outer Glass */}
             <Cylinder args={[0.08, 0.08, 0.2, 32]} position={[0, 0.1, 0]} castShadow>
-              <MeshTransmissionMaterial 
-                backside
-                samples={16}
-                thickness={0.1}
-                chromaticAberration={0.05}
-                anisotropy={0.1}
-                distortion={0.1}
-                distortionScale={0.1}
-                temporalDistortion={0.1}
-                clearcoat={1}
-                attenuationDistance={0.5}
-                attenuationColor="#ffffff"
-                color="#e2e8f0"
-              />
+              <GlassMaterial />
             </Cylinder>
+            {/* Liquid */}
             <Cylinder args={[0.078, 0.078, 0.15, 32]} position={[0, 0.08, 0]}>
                <meshStandardMaterial color={color} transparent opacity={0.7} roughness={0.1} metalness={0.1} />
             </Cylinder>
@@ -84,38 +95,15 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
 
         {type === 'flask' && (
           <group>
+            {/* Neck Glass */}
             <Cylinder args={[0.02, 0.04, 0.1, 32]} position={[0, 0.2, 0]} castShadow>
-               <MeshTransmissionMaterial 
-                backside
-                samples={16}
-                thickness={0.1}
-                chromaticAberration={0.05}
-                anisotropy={0.1}
-                distortion={0.1}
-                distortionScale={0.1}
-                temporalDistortion={0.1}
-                clearcoat={1}
-                attenuationDistance={0.5}
-                attenuationColor="#ffffff"
-                color="#e2e8f0"
-              />
+               <GlassMaterial />
             </Cylinder>
+            {/* Body Glass */}
             <Sphere args={[0.1, 32, 32]} position={[0, 0.05, 0]} scale={[1, 0.8, 1]} castShadow>
-              <MeshTransmissionMaterial 
-                backside
-                samples={16}
-                thickness={0.1}
-                chromaticAberration={0.05}
-                anisotropy={0.1}
-                distortion={0.1}
-                distortionScale={0.1}
-                temporalDistortion={0.1}
-                clearcoat={1}
-                attenuationDistance={0.5}
-                attenuationColor="#ffffff"
-                color="#e2e8f0"
-              />
+              <GlassMaterial />
             </Sphere>
+            {/* Liquid */}
              <Sphere args={[0.098, 32, 32]} position={[0, 0.05, 0]} scale={[1, 0.8, 1]}>
                <meshStandardMaterial color={color} transparent opacity={0.7} roughness={0.1} metalness={0.1} />
             </Sphere>
