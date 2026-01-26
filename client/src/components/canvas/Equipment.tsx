@@ -12,15 +12,27 @@ interface DraggableItemProps {
   onSelect?: () => void;
 }
 
-export function DraggableItem({ position: initialPos, color, type, name, onSelect }: DraggableItemProps) {
+export function DraggableItem({ position: initialPos, color: initialColor, type, name, onSelect }: DraggableItemProps) {
   const meshRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const [selected, setSelected] = useState(false);
   const [showSparkles, setShowSparkles] = useState(false);
+  const [liquidColor, setLiquidColor] = useState(initialColor);
+  const [isReacting, setIsReacting] = useState(false);
   
   const onSelectStart = () => {
     setSelected(true);
     setShowSparkles(true);
+    
+    // Simple reaction logic: change color on click
+    if (!isReacting) {
+      setIsReacting(true);
+      const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+      const nextColor = colors[Math.floor(Math.random() * colors.length)];
+      setLiquidColor(nextColor);
+      setTimeout(() => setIsReacting(false), 2000);
+    }
+
     setTimeout(() => setShowSparkles(false), 2000);
     onSelect?.();
   };
@@ -59,7 +71,16 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
       onBlur={() => setHovered(false)}
     >
       <group position={initialPos} ref={meshRef}>
-        {showSparkles && <Sparkles count={50} scale={0.5} size={2} speed={0.4} color="#06b6d4" />}
+        {(showSparkles || isReacting) && (
+          <Sparkles 
+            count={isReacting ? 100 : 50} 
+            scale={0.5} 
+            size={isReacting ? 3 : 2} 
+            speed={isReacting ? 0.8 : 0.4} 
+            color={liquidColor} 
+          />
+        )}
+        
         {hovered && (
           <Text
             position={[0, 0.35, 0]}
@@ -82,37 +103,32 @@ export function DraggableItem({ position: initialPos, color, type, name, onSelec
 
         {type === 'beaker' && (
           <group>
-            {/* Outer Glass */}
             <Cylinder args={[0.08, 0.08, 0.2, 32]} position={[0, 0.1, 0]} castShadow>
               <GlassMaterial />
             </Cylinder>
-            {/* Liquid */}
             <Cylinder args={[0.078, 0.078, 0.15, 32]} position={[0, 0.08, 0]}>
-               <meshStandardMaterial color={color} transparent opacity={0.7} roughness={0.1} metalness={0.1} />
+               <meshStandardMaterial color={liquidColor} transparent opacity={0.7} roughness={0.1} metalness={0.1} />
             </Cylinder>
           </group>
         )}
 
         {type === 'flask' && (
           <group>
-            {/* Neck Glass */}
             <Cylinder args={[0.02, 0.04, 0.1, 32]} position={[0, 0.2, 0]} castShadow>
                <GlassMaterial />
             </Cylinder>
-            {/* Body Glass */}
             <Sphere args={[0.1, 32, 32]} position={[0, 0.05, 0]} scale={[1, 0.8, 1]} castShadow>
               <GlassMaterial />
             </Sphere>
-            {/* Liquid */}
              <Sphere args={[0.098, 32, 32]} position={[0, 0.05, 0]} scale={[1, 0.8, 1]}>
-               <meshStandardMaterial color={color} transparent opacity={0.7} roughness={0.1} metalness={0.1} />
+               <meshStandardMaterial color={liquidColor} transparent opacity={0.7} roughness={0.1} metalness={0.1} />
             </Sphere>
           </group>
         )}
         
         {type === 'cube' && (
           <Box args={[0.15, 0.15, 0.15]} position={[0, 0.075, 0]} castShadow>
-             <meshStandardMaterial color={color} roughness={0.5} metalness={0.2} />
+             <meshStandardMaterial color={liquidColor} roughness={0.5} metalness={0.2} />
           </Box>
         )}
       </group>
@@ -142,7 +158,7 @@ export function BunsenBurner({ position }: { position: [number, number, number] 
          <coneGeometry args={[0.02, 0.08, 8]} />
          <meshBasicMaterial color="#3b82f6" transparent opacity={0.8} />
        </mesh>
-       <pointLight position={[0, 0.25, 0]} color="#3b82f6" intensity={0.5} distance={1} />
+       <pointLight position={[0, 0.22, 0]} color="#3b82f6" intensity={1} distance={2} />
     </group>
   );
 }
@@ -272,6 +288,31 @@ export function BotanicalSample({ position }: { position: [number, number, numbe
         <Box args={[0.005, 0.08, 0.005]} position={[0, 0.04, 0]}>
           <meshStandardMaterial color="#15803d" roughness={0.9} />
         </Box>
+      </group>
+    </group>
+  );
+}
+
+export function StorageShelf({ position, length = 2 }: { position: [number, number, number], length?: number }) {
+  return (
+    <group position={position}>
+      <Box args={[length, 0.05, 0.3]}>
+        <meshStandardMaterial color="#475569" />
+      </Box>
+      <group position={[-length / 2 + 0.2, 0.1, 0]}>
+         {Array.from({ length: 4 }).map((_, i) => (
+           <group key={i} position={[i * 0.4, 0, 0]}>
+             <Cylinder args={[0.06, 0.06, 0.15, 16]}>
+               <meshStandardMaterial color="#cbd5e1" transparent opacity={0.6} />
+             </Cylinder>
+             <Cylinder args={[0.062, 0.062, 0.02, 16]} position={[0, 0.08, 0]}>
+               <meshStandardMaterial color="#1e293b" />
+             </Cylinder>
+             <Text position={[0, 0, 0.061]} fontSize={0.02} color="#1e293b">
+               {['NaCl', 'KMnO4', 'HCl', 'NaOH'][i]}
+             </Text>
+           </group>
+         ))}
       </group>
     </group>
   );

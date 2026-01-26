@@ -8,10 +8,11 @@ import {
   MagneticStirrer, 
   VortexMixer, 
   Whiteboard, 
-  BotanicalSample 
+  BotanicalSample,
+  StorageShelf
 } from '../components/canvas/Equipment';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Sky, ContactShadows, PositionalAudio } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Sky, ContactShadows } from '@react-three/drei';
 import { VRButton, XR, Controllers, Hands } from '@react-three/xr';
 
 import { FumeHood, Microscope, Centrifuge, ComputerStation, SafetyStation } from '../components/canvas/LabBench';
@@ -76,6 +77,10 @@ export default function Scene() {
 
             {/* Waste Management */}
             <TrashBin position={[2.5, 0, 3]} />
+
+            {/* Storage Shelves */}
+            <StorageShelf position={[-4.9, 2.5, 2]} length={3} />
+            <StorageShelf position={[-4.9, 1.8, 2]} length={3} />
 
             {/* Professional Equipment Setup */}
             <FumeHood position={[2, 0, -1.9]} />
