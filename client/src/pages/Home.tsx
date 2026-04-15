@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Scene } from "@/components/Scene";
 import { DashboardOverlay } from "@/components/DashboardOverlay";
+import { ExperimentSelector } from "@/components/ExperimentSelector";
+import { NavigationHint } from "@/components/NavigationHint";
 
 export default function Home() {
   const [lastInteraction, setLastInteraction] = useState<string | null>(null);
@@ -18,6 +20,8 @@ export default function Home() {
       
       {/* UI Overlay Layer (HTML) */}
       <DashboardOverlay lastInteraction={lastInteraction} />
+      <ExperimentSelector />
+      <NavigationHint />
     </div>
   );
 }
