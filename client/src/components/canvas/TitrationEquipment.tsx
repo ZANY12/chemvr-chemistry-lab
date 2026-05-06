@@ -12,6 +12,7 @@ interface BuretteProps {
   titrantColor?: string;
   initialVolume?: number;
   onVolumeChange?: (volume: number) => void;
+  onSelect?: () => void;
 }
 
 export function Burette({
@@ -20,6 +21,7 @@ export function Burette({
   titrantColor = "#e9d5ff",
   initialVolume = 50,
   onVolumeChange,
+  onSelect,
 }: BuretteProps) {
   const rigidBodyRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<THREE.Group>(null);
@@ -47,6 +49,8 @@ export function Burette({
       if (inputSource?.gamepad?.hapticActuators?.[0]) {
         inputSource.gamepad.hapticActuators[0].pulse(0.3, 100);
       }
+      
+      onSelect?.();
     }
   });
 
@@ -89,7 +93,7 @@ export function Burette({
       }
     }
 
-    // Follow controller when grabbed
+    // Follow controller when grabbed in VR
     if (grabbed && grabbingController) {
       const controller = grabbingController === 'left' ? leftController : rightController;
       if (controller?.grip && rigidBodyRef.current) {
@@ -101,6 +105,23 @@ export function Burette({
         controller.grip.getWorldQuaternion(gripQuat);
         rigidBodyRef.current.setRotation(gripQuat, true);
       }
+    }
+    
+    // Follow mouse in desktop mode when grabbed
+    if (grabbed && !grabbingController && rigidBodyRef.current) {
+      const camera = state.camera;
+      const mouse = state.pointer;
+      
+      // Project mouse position to 3D space at a fixed distance from camera
+      const distance = 2;
+      const x = mouse.x * distance;
+      const y = mouse.y * distance;
+      const z = -distance;
+      
+      const targetPos = new THREE.Vector3(x, y, z);
+      targetPos.applyMatrix4(camera.matrixWorld);
+      
+      rigidBodyRef.current.setTranslation(targetPos, true);
     }
   });
 
@@ -123,6 +144,10 @@ export function Burette({
       <Interactive
         onHover={() => setHovered(true)}
         onBlur={() => setHovered(false)}
+        onSelect={() => {
+          setGrabbed(!grabbed);
+          onSelect?.();
+        }}
       >
         <group ref={meshRef}>
           {/* Glow when hoverable */}
@@ -229,6 +254,7 @@ interface ConicalFlaskProps {
   initialVolume?: number;
   initialColor?: string;
   onColorChange?: (color: string) => void;
+  onSelect?: () => void;
 }
 
 export function ConicalFlask({
@@ -237,6 +263,7 @@ export function ConicalFlask({
   initialVolume = 25,
   initialColor = "#fca5a5",
   onColorChange,
+  onSelect,
 }: ConicalFlaskProps) {
   const rigidBodyRef = useRef<RapierRigidBody>(null);
   const meshRef = useRef<THREE.Group>(null);
@@ -249,6 +276,12 @@ export function ConicalFlask({
   const rightController = useController('right');
   const [grabbingController, setGrabbingController] = useState<'left' | 'right' | null>(null);
 
+  // Desktop click to grab/release
+  const handleClick = () => {
+    setGrabbed(!grabbed);
+    onSelect?.();
+  };
+
   useXREvent('selectstart', (e: any) => {
     if (hovered) {
       setGrabbed(true);
@@ -259,6 +292,8 @@ export function ConicalFlask({
       if (inputSource?.gamepad?.hapticActuators?.[0]) {
         inputSource.gamepad.hapticActuators[0].pulse(0.3, 100);
       }
+      
+      onSelect?.();
     }
   });
 
@@ -269,7 +304,8 @@ export function ConicalFlask({
     }
   });
 
-  useFrame(() => {
+  useFrame((state) => {
+    // Follow controller when grabbed in VR
     if (grabbed && grabbingController) {
       const controller = grabbingController === 'left' ? leftController : rightController;
       if (controller?.grip && rigidBodyRef.current) {
@@ -281,6 +317,23 @@ export function ConicalFlask({
         controller.grip.getWorldQuaternion(gripQuat);
         rigidBodyRef.current.setRotation(gripQuat, true);
       }
+    }
+    
+    // Follow mouse in desktop mode when grabbed
+    if (grabbed && !grabbingController && rigidBodyRef.current) {
+      const camera = state.camera;
+      const mouse = state.pointer;
+      
+      // Project mouse position to 3D space at a fixed distance from camera
+      const distance = 2;
+      const x = mouse.x * distance;
+      const y = mouse.y * distance;
+      const z = -distance;
+      
+      const targetPos = new THREE.Vector3(x, y, z);
+      targetPos.applyMatrix4(camera.matrixWorld);
+      
+      rigidBodyRef.current.setTranslation(targetPos, true);
     }
   });
 
@@ -327,6 +380,10 @@ export function ConicalFlask({
       <Interactive
         onHover={() => setHovered(true)}
         onBlur={() => setHovered(false)}
+        onSelect={() => {
+          setGrabbed(!grabbed);
+          onSelect?.();
+        }}
       >
         <group ref={meshRef}>
           {hovered && !grabbed && (

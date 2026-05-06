@@ -1,5 +1,6 @@
 import { ExperimentStep } from './labTrainingSystem';
 import { titrationExperimentInfo } from './titrationExperiment';
+import { distillationExperimentInfo } from './distillationExperiment';
 
 export const acidBaseNeutralizationExperiment: ExperimentStep[] = [
   {
@@ -189,14 +190,165 @@ export const qualitativeAnalysisExperiment: ExperimentStep[] = [
   },
 ];
 
+export const acidityTestingExperiment: ExperimentStep[] = [
+  {
+    id: 'acidity-1',
+    title: 'Safety Check',
+    description: 'Put on safety goggles, lab coat, and gloves before beginning.',
+    required: true,
+    completed: false,
+    safetyCheck: true,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+  {
+    id: 'acidity-2',
+    title: 'Prepare Test Samples',
+    description: 'Gather unknown solutions A, B, and C in separate beakers. Label them clearly.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+    equipmentRequired: ['Beakers', 'Labels'],
+  },
+  {
+    id: 'acidity-3',
+    title: 'pH Paper Test',
+    description: 'Dip pH paper into each solution. Compare color change with pH chart.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+  {
+    id: 'acidity-4',
+    title: 'Digital pH Meter',
+    description: 'Use digital pH meter for accurate readings. Rinse probe between samples.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+    equipmentRequired: ['pH meter'],
+  },
+  {
+    id: 'acidity-5',
+    title: 'Litmus Test',
+    description: 'Test with red and blue litmus paper. Record color changes.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+  {
+    id: 'acidity-6',
+    title: 'Universal Indicator',
+    description: 'Add universal indicator drops. Observe and record color.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+  {
+    id: 'acidity-7',
+    title: 'Record Results',
+    description: 'Document pH values and classify each solution as acidic, neutral, or basic.',
+    required: true,
+    completed: false,
+  },
+  {
+    id: 'acidity-8',
+    title: 'Clean Up',
+    description: 'Dispose of solutions properly. Rinse all equipment. Remove PPE.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+];
+
+export const chemicalReactionTestExperiment: ExperimentStep[] = [
+  {
+    id: 'reaction-1',
+    title: 'Safety Check',
+    description: 'Put on safety goggles, lab coat, and gloves. This reaction produces heat and oxygen gas.',
+    required: true,
+    completed: false,
+    safetyCheck: true,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+  {
+    id: 'reaction-2',
+    title: 'Prepare Conical Flask',
+    description: 'Place a clean 250 mL conical flask on the lab bench.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+    equipmentRequired: ['Conical flask'],
+  },
+  {
+    id: 'reaction-3',
+    title: 'Add Hydrogen Peroxide',
+    description: 'Carefully measure and pour 50 mL of 3% hydrogen peroxide (H₂O₂) into the flask.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+  {
+    id: 'reaction-4',
+    title: 'Prepare Potassium Permanganate',
+    description: 'Measure 5 mL of 0.1M potassium permanganate (KMnO₄) solution in a graduated cylinder.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+  {
+    id: 'reaction-5',
+    title: 'Add KMnO₄ to H₂O₂',
+    description: 'Slowly add the purple KMnO₄ solution to the H₂O₂ in the flask. AI will analyze the reaction.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+  {
+    id: 'reaction-6',
+    title: 'Observe Reaction',
+    description: 'Watch the color change from purple to colorless. Note bubbling (oxygen gas). AI monitors temperature and gas evolution.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+  {
+    id: 'reaction-7',
+    title: 'AI Analysis Complete',
+    description: 'AI has calculated: Reaction type (Redox), Products (Mn²⁺, O₂, H₂O), Temperature change (+8°C), Gas volume (12 mL O₂).',
+    required: true,
+    completed: false,
+  },
+  {
+    id: 'reaction-8',
+    title: 'Record Results',
+    description: 'Document observations: Initial color (purple), Final color (colorless/pale pink), Temperature increase, Gas bubbles.',
+    required: true,
+    completed: false,
+  },
+  {
+    id: 'reaction-9',
+    title: 'Clean Up',
+    description: 'Dispose of solution in aqueous waste. Rinse flask thoroughly. Remove PPE.',
+    required: true,
+    completed: false,
+    ppeRequired: ['goggles', 'labCoat', 'gloves'],
+  },
+];
+
 export const allExperiments = {
   'acid-base-titration': titrationExperimentInfo,
-  'acid-base-neutralization': {
-    name: 'Acid-Base Neutralization',
-    description: 'Learn proper titration technique and observe neutralization reactions.',
+  'acidity-testing': {
+    name: 'Acidity Testing',
+    description: 'Test and classify unknown solutions as acidic, neutral, or basic using pH indicators and meters.',
     difficulty: 'beginner',
-    duration: '30 minutes',
-    steps: acidBaseNeutralizationExperiment,
+    duration: '20-30 minutes',
+    steps: acidityTestingExperiment,
+  },
+  'chemical-reaction-test': {
+    name: 'Chemical Reaction Test',
+    description: 'Observe the redox reaction between hydrogen peroxide and potassium permanganate with AI-powered analysis.',
+    difficulty: 'beginner',
+    duration: '15-20 minutes',
+    steps: chemicalReactionTestExperiment,
   },
   'crystal-growth': {
     name: 'Crystal Growth',

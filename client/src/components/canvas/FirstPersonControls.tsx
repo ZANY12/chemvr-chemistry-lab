@@ -154,33 +154,41 @@ export function FirstPersonControls({
   useFrame((state, delta) => {
     if (isPresenting || !enabled) return;
 
-    const actualMoveSpeed = moveSpeed * delta * 60; // Normalize for 60fps
+    const actualMoveSpeed = moveSpeed * delta;
 
-    velocity.current.x -= velocity.current.x * 8.0 * delta;
-    velocity.current.z -= velocity.current.z * 8.0 * delta;
-    velocity.current.y -= velocity.current.y * 8.0 * delta;
+    // Calculate movement direction
+    const moveX = Number(moveState.current.right) - Number(moveState.current.left);
+    const moveZ = Number(moveState.current.forward) - Number(moveState.current.backward);
+    const moveY = Number(moveState.current.up) - Number(moveState.current.down);
 
-    direction.current.z = Number(moveState.current.forward) - Number(moveState.current.backward);
-    direction.current.x = Number(moveState.current.right) - Number(moveState.current.left);
-    direction.current.y = Number(moveState.current.up) - Number(moveState.current.down);
-    direction.current.normalize();
-
-    if (moveState.current.forward || moveState.current.backward) {
-      velocity.current.z -= direction.current.z * actualMoveSpeed;
+    // Apply movement if any keys are pressed
+    if (moveX !== 0 || moveZ !== 0 || moveY !== 0) {
+      // Get camera direction vectors
+      const forward = new THREE.Vector3();
+      const right = new THREE.Vector3();
+      
+      camera.getWorldDirection(forward);
+      right.crossVectors(camera.up, forward).normalize();
+      forward.normalize();
+      
+      // Zero out Y component for horizontal movement
+      forward.y = 0;
+      forward.normalize();
+      right.y = 0;
+      right.normalize();
+      
+      // Calculate final movement vector
+      const movement = new THREE.Vector3();
+      movement.add(forward.multiplyScalar(-moveZ * actualMoveSpeed));
+      movement.add(right.multiplyScalar(moveX * actualMoveSpeed));
+      movement.y = moveY * actualMoveSpeed;
+      
+      // Apply movement to camera
+      camera.position.add(movement);
     }
-    if (moveState.current.left || moveState.current.right) {
-      velocity.current.x -= direction.current.x * actualMoveSpeed;
-    }
-    if (moveState.current.up || moveState.current.down) {
-      velocity.current.y += direction.current.y * actualMoveSpeed;
-    }
 
-    camera.translateX(velocity.current.x);
-    camera.translateY(velocity.current.y);
-    camera.translateZ(velocity.current.z);
-
-    // Keep camera at reasonable height (min 0.5m, max 3m)
-    camera.position.y = Math.max(0.5, Math.min(3, camera.position.y));
+    // Keep camera at reasonable height (min 1.0m, max 3m)
+    camera.position.y = Math.max(1.0, Math.min(3, camera.position.y));
   });
 
   return null;

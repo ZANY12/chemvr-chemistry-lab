@@ -20,53 +20,30 @@ export function SafetyGoggles({ position }: { position: [number, number, number]
       onHover={() => setHovered(true)}
       onBlur={() => setHovered(false)}
     >
-      <group position={position}>
-        {hovered && (
-          <Text position={[0, 0.15, 0]} fontSize={0.04} color="cyan" anchorX="center">
-            {gogglesOn ? '✓ Goggles Worn' : 'Click to Wear Goggles'}
-          </Text>
-        )}
+      <group 
+        position={position}
+        onClick={handleSelect}
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+      >
+        {/* Large visible clickable box */}
+        <mesh>
+          <boxGeometry args={[0.3, 0.3, 0.2]} />
+          <meshStandardMaterial 
+            color={gogglesOn ? '#22d3ee' : '#fbbf24'} 
+            emissive={gogglesOn ? '#22d3ee' : '#fbbf24'}
+            emissiveIntensity={0.5}
+          />
+        </mesh>
         
-        {/* Goggles frame */}
-        <group>
-          {/* Left lens */}
-          <Cylinder args={[0.04, 0.04, 0.01]} position={[-0.05, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <meshStandardMaterial
-              color={gogglesOn ? '#22d3ee' : '#cbd5e1'}
-              transparent
-              opacity={0.3}
-              emissive={gogglesOn ? '#22d3ee' : '#000000'}
-              emissiveIntensity={gogglesOn ? 0.3 : 0}
-            />
-          </Cylinder>
-          
-          {/* Right lens */}
-          <Cylinder args={[0.04, 0.04, 0.01]} position={[0.05, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <meshStandardMaterial
-              color={gogglesOn ? '#22d3ee' : '#cbd5e1'}
-              transparent
-              opacity={0.3}
-              emissive={gogglesOn ? '#22d3ee' : '#000000'}
-              emissiveIntensity={gogglesOn ? 0.3 : 0}
-            />
-          </Cylinder>
-          
-          {/* Bridge */}
-          <Box args={[0.02, 0.01, 0.01]} position={[0, 0, 0]}>
-            <meshStandardMaterial color="#1e293b" />
-          </Box>
-          
-          {/* Strap */}
-          <Cylinder args={[0.005, 0.005, 0.15]} position={[0, 0, -0.05]} rotation={[0, Math.PI / 2, 0]}>
-            <meshStandardMaterial color="#334155" />
-          </Cylinder>
-        </group>
-
+        <Text position={[0, 0.2, 0.11]} fontSize={0.08} color="#000" anchorX="center" fontWeight="bold">
+          GOGGLES
+        </Text>
+        
         {gogglesOn && (
-          <mesh position={[0, 0, 0]}>
-            <sphereGeometry args={[0.08, 16, 16]} />
-            <meshBasicMaterial color="#22d3ee" wireframe />
-          </mesh>
+          <Text position={[0, -0.2, 0.11]} fontSize={0.06} color="#0f0" anchorX="center">
+            ✓ WORN
+          </Text>
         )}
       </group>
     </Interactive>
@@ -89,40 +66,30 @@ export function LabCoat({ position }: { position: [number, number, number] }) {
       onHover={() => setHovered(true)}
       onBlur={() => setHovered(false)}
     >
-      <group position={position}>
-        {hovered && (
-          <Text position={[0, 0.5, 0]} fontSize={0.04} color="cyan" anchorX="center">
-            {labCoatOn ? '✓ Lab Coat Worn' : 'Click to Wear Lab Coat'}
-          </Text>
-        )}
-        
-        {/* Lab coat representation */}
-        <Box args={[0.4, 0.8, 0.1]} position={[0, 0.4, 0]}>
-          <meshStandardMaterial
-            color={labCoatOn ? '#22d3ee' : '#f8fafc'}
-            roughness={0.9}
-            emissive={labCoatOn ? '#22d3ee' : '#000000'}
-            emissiveIntensity={labCoatOn ? 0.2 : 0}
+      <group 
+        position={position}
+        onClick={handleSelect}
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+      >
+        {/* Large visible clickable box */}
+        <mesh>
+          <boxGeometry args={[0.3, 0.3, 0.2]} />
+          <meshStandardMaterial 
+            color={labCoatOn ? '#22d3ee' : '#f8fafc'} 
+            emissive={labCoatOn ? '#22d3ee' : '#ffffff'}
+            emissiveIntensity={0.5}
           />
-        </Box>
+        </mesh>
         
-        {/* Buttons */}
-        {[0.3, 0.4, 0.5].map((y, i) => (
-          <Sphere key={i} args={[0.015, 8, 8]} position={[0, y, 0.051]}>
-            <meshStandardMaterial color="#334155" />
-          </Sphere>
-        ))}
+        <Text position={[0, 0.2, 0.11]} fontSize={0.08} color="#000" anchorX="center" fontWeight="bold">
+          COAT
+        </Text>
         
-        {/* Collar */}
-        <Box args={[0.15, 0.05, 0.02]} position={[0, 0.78, 0.04]}>
-          <meshStandardMaterial color={labCoatOn ? '#22d3ee' : '#f8fafc'} roughness={0.9} />
-        </Box>
-
         {labCoatOn && (
-          <mesh position={[0, 0.4, 0]}>
-            <boxGeometry args={[0.5, 0.9, 0.15]} />
-            <meshBasicMaterial color="#22d3ee" wireframe />
-          </mesh>
+          <Text position={[0, -0.2, 0.11]} fontSize={0.06} color="#0f0" anchorX="center">
+            ✓ WORN
+          </Text>
         )}
       </group>
     </Interactive>
@@ -145,60 +112,30 @@ export function LabGloves({ position }: { position: [number, number, number] }) 
       onHover={() => setHovered(true)}
       onBlur={() => setHovered(false)}
     >
-      <group position={position}>
-        {hovered && (
-          <Text position={[0, 0.15, 0]} fontSize={0.04} color="cyan" anchorX="center">
-            {glovesOn ? '✓ Gloves Worn' : 'Click to Wear Gloves'}
-          </Text>
-        )}
+      <group 
+        position={position}
+        onClick={handleSelect}
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+      >
+        {/* Large visible clickable box */}
+        <mesh>
+          <boxGeometry args={[0.3, 0.3, 0.2]} />
+          <meshStandardMaterial 
+            color={glovesOn ? '#22d3ee' : '#a855f7'} 
+            emissive={glovesOn ? '#22d3ee' : '#a855f7'}
+            emissiveIntensity={0.5}
+          />
+        </mesh>
         
-        {/* Left glove */}
-        <group position={[-0.06, 0, 0]}>
-          <Box args={[0.04, 0.08, 0.02]} position={[0, 0.04, 0]}>
-            <meshStandardMaterial
-              color={glovesOn ? '#22d3ee' : '#a855f7'}
-              emissive={glovesOn ? '#22d3ee' : '#000000'}
-              emissiveIntensity={glovesOn ? 0.3 : 0}
-            />
-          </Box>
-          {/* Fingers */}
-          {[-0.015, -0.005, 0.005, 0.015].map((x, i) => (
-            <Box key={i} args={[0.008, 0.03, 0.015]} position={[x, 0.095, 0]}>
-              <meshStandardMaterial
-                color={glovesOn ? '#22d3ee' : '#a855f7'}
-                emissive={glovesOn ? '#22d3ee' : '#000000'}
-                emissiveIntensity={glovesOn ? 0.3 : 0}
-              />
-            </Box>
-          ))}
-        </group>
+        <Text position={[0, 0.2, 0.11]} fontSize={0.08} color="#000" anchorX="center" fontWeight="bold">
+          GLOVES
+        </Text>
         
-        {/* Right glove */}
-        <group position={[0.06, 0, 0]}>
-          <Box args={[0.04, 0.08, 0.02]} position={[0, 0.04, 0]}>
-            <meshStandardMaterial
-              color={glovesOn ? '#22d3ee' : '#a855f7'}
-              emissive={glovesOn ? '#22d3ee' : '#000000'}
-              emissiveIntensity={glovesOn ? 0.3 : 0}
-            />
-          </Box>
-          {/* Fingers */}
-          {[-0.015, -0.005, 0.005, 0.015].map((x, i) => (
-            <Box key={i} args={[0.008, 0.03, 0.015]} position={[x, 0.095, 0]}>
-              <meshStandardMaterial
-                color={glovesOn ? '#22d3ee' : '#a855f7'}
-                emissive={glovesOn ? '#22d3ee' : '#000000'}
-                emissiveIntensity={glovesOn ? 0.3 : 0}
-              />
-            </Box>
-          ))}
-        </group>
-
         {glovesOn && (
-          <mesh position={[0, 0.05, 0]}>
-            <boxGeometry args={[0.15, 0.12, 0.05]} />
-            <meshBasicMaterial color="#22d3ee" wireframe />
-          </mesh>
+          <Text position={[0, -0.2, 0.11]} fontSize={0.06} color="#0f0" anchorX="center">
+            ✓ WORN
+          </Text>
         )}
       </group>
     </Interactive>
@@ -208,29 +145,32 @@ export function LabGloves({ position }: { position: [number, number, number] }) 
 export function PPEStation({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      {/* Wall-mounted board */}
-      <Box args={[1.2, 0.05, 0.5]}>
-        <meshStandardMaterial color="#334155" />
+      {/* Table surface */}
+      <Box args={[1.5, 0.05, 0.6]} position={[0, 0, 0]}>
+        <meshStandardMaterial color="#475569" roughness={0.8} />
       </Box>
       
-      {/* Hooks */}
-      {[-0.4, 0, 0.4].map((x, i) => (
-        <Cylinder key={i} args={[0.01, 0.01, 0.08]} position={[x, 0.04, 0.2]} rotation={[Math.PI / 2, 0, 0]}>
-          <meshStandardMaterial color="#94a3b8" metalness={0.8} />
+      {/* Table legs */}
+      {[[-0.65, -0.4, -0.25], [0.65, -0.4, -0.25], [-0.65, -0.4, 0.25], [0.65, -0.4, 0.25]].map((pos, i) => (
+        <Cylinder key={i} args={[0.03, 0.03, 0.8]} position={pos as [number, number, number]}>
+          <meshStandardMaterial color="#334155" />
         </Cylinder>
       ))}
       
-      {/* PPE Items */}
-      <SafetyGoggles position={[-0.4, 0, 0.3]} />
-      <LabCoat position={[0, -0.3, 0.3]} />
-      <LabGloves position={[0.4, 0, 0.3]} />
+      {/* PPE Items laying on table */}
+      <SafetyGoggles position={[-0.5, 0.05, 0]} />
+      <LabGloves position={[0, 0.05, 0]} />
+      <LabCoat position={[0.5, 0.05, 0]} />
       
-      {/* Sign */}
-      <Box args={[0.8, 0.15, 0.02]} position={[0, 0.35, 0.26]}>
+      {/* Sign on table */}
+      <Box args={[1.2, 0.2, 0.02]} position={[0, 0.15, -0.25]}>
         <meshStandardMaterial color="#fbbf24" />
       </Box>
-      <Text position={[0, 0.35, 0.27]} fontSize={0.05} color="#1e293b" anchorX="center" fontWeight="bold">
+      <Text position={[0, 0.15, -0.24]} fontSize={0.06} color="#1e293b" anchorX="center" fontWeight="bold">
         PPE REQUIRED
+      </Text>
+      <Text position={[0, 0.08, -0.24]} fontSize={0.03} color="#1e293b" anchorX="center">
+        Click items to wear
       </Text>
     </group>
   );
