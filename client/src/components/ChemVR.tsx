@@ -32,12 +32,12 @@ export function NavigationHint() {
   }
 
   return (
-    <Card className="fixed bottom-4 left-4 z-40 bg-slate-900/90 border-cyan-500/30 backdrop-blur-sm max-w-sm pointer-events-auto">
-      <CardContent className="p-4 space-y-3">
+    <Card className="fixed bottom-4 left-4 z-40 bg-slate-900/50 border-cyan-500/20 backdrop-blur-sm max-w-xs pointer-events-auto">
+      <CardContent className="p-3 space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-cyan-400 flex items-center gap-2">
-            <Keyboard className="w-4 h-4" />
-            Navigation Controls
+          <h3 className="text-xs font-semibold text-cyan-400 flex items-center gap-1.5">
+            <Keyboard className="w-3.5 h-3.5" />
+            Controls
           </h3>
           <button
             onClick={() => setShow(false)}
@@ -50,9 +50,9 @@ export function NavigationHint() {
         {!isVR ? (
           <>
             {/* Desktop Controls */}
-            <div className="space-y-2 text-xs text-slate-300">
-              <div className="flex items-start gap-2">
-                <MousePointer className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1.5 text-[11px] text-slate-300">
+              <div className="flex items-start gap-1.5">
+                <MousePointer className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-white">Mouse</p>
                   <p>Click to lock pointer, then look around</p>
@@ -60,17 +60,17 @@ export function NavigationHint() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-2">
-                <Keyboard className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+              <div className="flex items-start gap-1.5">
+                <Keyboard className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-white">Movement</p>
-                  <div className="grid grid-cols-2 gap-1 mt-1">
-                    <span className="bg-slate-800 px-2 py-0.5 rounded">W/↑ Forward</span>
-                    <span className="bg-slate-800 px-2 py-0.5 rounded">S/↓ Back</span>
-                    <span className="bg-slate-800 px-2 py-0.5 rounded">A/← Left</span>
-                    <span className="bg-slate-800 px-2 py-0.5 rounded">D/→ Right</span>
-                    <span className="bg-slate-800 px-2 py-0.5 rounded">Space Up</span>
-                    <span className="bg-slate-800 px-2 py-0.5 rounded">Shift Down</span>
+                  <div className="grid grid-cols-2 gap-0.5 mt-0.5 text-[10px]">
+                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">W Forward</span>
+                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">S Back</span>
+                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">A Left</span>
+                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">D Right</span>
+                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">Space Up</span>
+                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">Shift Down</span>
                   </div>
                 </div>
               </div>

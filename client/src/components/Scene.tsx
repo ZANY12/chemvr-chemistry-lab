@@ -373,6 +373,29 @@ export function Scene({ onInteract }: SceneProps) {
         It injects itself into the DOM.
       */}
       <VRButton />
+      
+      {/* Custom VRButton styling */}
+      <style>{`
+        #VRButton {
+          position: fixed !important;
+          bottom: 16px !important;
+          right: 16px !important;
+          padding: 8px 16px !important;
+          font-size: 12px !important;
+          background: rgba(15, 23, 42, 0.5) !important;
+          border: 1px solid rgba(34, 211, 238, 0.2) !important;
+          color: rgba(34, 211, 238, 0.9) !important;
+          border-radius: 8px !important;
+          backdrop-filter: blur(4px) !important;
+          z-index: 30 !important;
+          transition: all 0.2s !important;
+        }
+        #VRButton:hover {
+          background: rgba(15, 23, 42, 0.7) !important;
+          border-color: rgba(34, 211, 238, 0.4) !important;
+          color: rgba(34, 211, 238, 1) !important;
+        }
+      `}</style>
 
       <Canvas 
         shadows={false}
