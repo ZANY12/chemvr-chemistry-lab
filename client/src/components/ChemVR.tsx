@@ -1,43 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from './ui/card';
-import { Keyboard, MousePointer, Gamepad2 } from 'lucide-react';
+import { CheckCircle2, Circle, ListTodo } from 'lucide-react';
+import { useLabTraining } from '../lib/labTrainingSystem';
 
 export function NavigationHint() {
   const [show, setShow] = useState(true);
-  const [isVR, setIsVR] = useState(false);
+  const { experimentSteps, currentStepIndex, currentExperiment } = useLabTraining();
 
-  useEffect(() => {
-    // Auto-hide after 10 seconds
-    const timer = setTimeout(() => setShow(false), 10000);
-    
-    // Check if in VR mode
-    const checkVR = () => {
-      setIsVR(!!navigator.xr);
-    };
-    checkVR();
+  // Don't show if no experiment is active
+  if (!currentExperiment || experimentSteps.length === 0) {
+    return null;
+  }
 
-    return () => clearTimeout(timer);
-  }, []);
+  const completedSteps = experimentSteps.filter(step => step.completed).length;
+  const totalSteps = experimentSteps.length;
+  const progressPercent = (completedSteps / totalSteps) * 100;
 
   if (!show) {
     return (
       <button
         onClick={() => setShow(true)}
         className="fixed bottom-4 left-4 z-40 p-2 bg-slate-900/80 border border-cyan-500/30 rounded-lg hover:bg-slate-800/80 transition-colors pointer-events-auto"
-        title="Show navigation controls"
+        title="Show experiment steps"
       >
-        <Keyboard className="w-5 h-5 text-cyan-400" />
+        <ListTodo className="w-5 h-5 text-cyan-400" />
+        <span className="absolute -top-1 -right-1 bg-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+          {completedSteps}
+        </span>
       </button>
     );
   }
 
   return (
-    <Card className="fixed bottom-4 left-4 z-40 bg-slate-900/50 border-cyan-500/20 backdrop-blur-sm max-w-xs pointer-events-auto">
+    <Card className="fixed bottom-4 left-4 z-40 bg-slate-900/50 border-cyan-500/20 backdrop-blur-sm max-w-sm pointer-events-auto">
       <CardContent className="p-3 space-y-2">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-semibold text-cyan-400 flex items-center gap-1.5">
-            <Keyboard className="w-3.5 h-3.5" />
-            Controls
+            <ListTodo className="w-3.5 h-3.5" />
+            Experiment Steps
           </h3>
           <button
             onClick={() => setShow(false)}
@@ -47,55 +48,76 @@ export function NavigationHint() {
           </button>
         </div>
 
-        {!isVR ? (
-          <>
-            {/* Desktop Controls */}
-            <div className="space-y-1.5 text-[11px] text-slate-300">
-              <div className="flex items-start gap-1.5">
-                <MousePointer className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-white">Mouse</p>
-                  <p>Click to lock pointer, then look around</p>
-                  <p className="text-slate-400 text-[10px]">Press ESC to unlock</p>
-                </div>
+        {/* Progress Bar */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="text-slate-400">Progress</span>
+            <span className="text-cyan-400 font-semibold">
+              {completedSteps} / {totalSteps} completed
+            </span>
+          </div>
+          <div className="w-full bg-slate-800/60 rounded-full h-1.5">
+            <div 
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 h-1.5 rounded-full transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Steps List */}
+        <div className="space-y-1 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+          {experimentSteps.map((step, index) => (
+            <div
+              key={step.id}
+              className={`flex items-start gap-2 p-2 rounded-lg transition-all ${
+                index === currentStepIndex
+                  ? 'bg-cyan-500/10 border border-cyan-500/30'
+                  : step.completed
+                  ? 'bg-green-500/5 border border-green-500/20'
+                  : 'bg-slate-800/30 border border-slate-700/30'
+              }`}
+            >
+              {/* Step Icon */}
+              {step.completed ? (
+                <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+              ) : index === currentStepIndex ? (
+                <Circle className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5 animate-pulse" />
+              ) : (
+                <Circle className="w-4 h-4 text-slate-500 flex-shrink-0 mt-0.5" />
+              )}
+
+              {/* Step Content */}
+              <div className="flex-1 min-w-0">
+                <p className={`text-[11px] font-medium ${
+                  step.completed ? 'text-green-400 line-through' : 
+                  index === currentStepIndex ? 'text-cyan-400' : 
+                  'text-slate-300'
+                }`}>
+                  {step.title}
+                </p>
+                {index === currentStepIndex && (
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    {step.description}
+                  </p>
+                )}
               </div>
 
-              <div className="flex items-start gap-1.5">
-                <Keyboard className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-white">Movement</p>
-                  <div className="grid grid-cols-2 gap-0.5 mt-0.5 text-[10px]">
-                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">W Forward</span>
-                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">S Back</span>
-                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">A Left</span>
-                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">D Right</span>
-                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">Space Up</span>
-                    <span className="bg-slate-800/60 px-1.5 py-0.5 rounded">Shift Down</span>
-                  </div>
-                </div>
-              </div>
+              {/* Step Number */}
+              <span className={`text-[10px] font-mono ${
+                step.completed ? 'text-green-500' : 
+                index === currentStepIndex ? 'text-cyan-400' : 
+                'text-slate-500'
+              }`}>
+                {index + 1}
+              </span>
             </div>
-          </>
-        ) : (
-          <>
-            {/* VR Controls */}
-            <div className="space-y-2 text-xs text-slate-300">
-              <div className="flex items-start gap-2">
-                <Gamepad2 className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-white">VR Controllers</p>
-                  <p>Left stick: Move forward/backward/strafe</p>
-                  <p>Right stick: Snap turn left/right</p>
-                  <p className="text-slate-400 text-[10px] mt-1">Or use hand tracking to grab and interact</p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+          ))}
+        </div>
 
-        <div className="pt-2 border-t border-slate-700">
+        {/* Footer Tip */}
+        <div className="pt-2 border-t border-slate-700/50">
           <p className="text-[10px] text-slate-400">
-            💡 Tip: Walk around the lab to access different equipment and stations
+            💡 Current step highlighted in cyan
           </p>
         </div>
       </CardContent>
