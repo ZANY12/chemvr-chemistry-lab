@@ -66,17 +66,6 @@ const getElementData = () => {
 
 export function LabRoom() {
   const floorSize = 20;
-  const elements = getElementData();
-
-  const phData = [
-    { v: 0, l: 'Battery Acid', c: '#ff0000' },
-    { v: 2, l: 'Lemon Juice', c: '#ff4d00' },
-    { v: 4, l: 'Tomato Juice', c: '#ff9900' },
-    { v: 7, l: 'Pure Water', c: '#00ff00' },
-    { v: 10, l: 'Soap', c: '#0099ff' },
-    { v: 12, l: 'Bleach', c: '#4d00ff' },
-    { v: 14, l: 'Drain Cleaner', c: '#9900ff' }
-  ];
 
   return (
     <group>
@@ -114,7 +103,6 @@ export function LabRoom() {
           <meshStandardMaterial color="#cbd5e1" roughness={0.6} />
         </mesh>
         
-        {/* Periodic Table Poster */}
         <group position={[0, 0.4, 0.15]}>
           <mesh>
             <boxGeometry args={[9.5, 3.8, 0.05]} />
@@ -123,19 +111,6 @@ export function LabRoom() {
           <Text position={[0, 1.7, 0.03]} fontSize={0.12} color="#1e293b" fontWeight="bold">
             PERIODIC TABLE OF ELEMENTS
           </Text>
-          
-          <group position={[-4.3, 1.3, 0.03]}>
-            {elements.map((el) => (
-              <group key={el.s} position={[el.x * 0.5, el.y * -0.32, 0]}>
-                <mesh>
-                  <planeGeometry args={[0.45, 0.28]} />
-                  <meshStandardMaterial color={el.c} />
-                </mesh>
-                <Text position={[0, -0.02, 0.01]} fontSize={0.1} color="#1e293b" fontWeight="bold">{el.s}</Text>
-                <Text position={[-0.15, 0.08, 0.01]} fontSize={0.04} color="#1e293b">{el.n}</Text>
-              </group>
-            ))}
-          </group>
         </group>
       </group>
 
@@ -151,20 +126,6 @@ export function LabRoom() {
             <boxGeometry args={[3, 3, 0.05]} />
             <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.1} />
           </mesh>
-          <Text position={[0, 1.3, 0.03]} fontSize={0.15} color="#1e293b" fontWeight="bold">pH SCALE</Text>
-          
-          <group position={[0, 0, 0.03]}>
-            {phData.map((d, i) => (
-              <group key={d.v} position={[0, 0.8 - i * 0.3, 0]}>
-                <mesh position={[-0.8, 0, 0]}>
-                  <planeGeometry args={[0.5, 0.25]} />
-                  <meshStandardMaterial color={d.c} />
-                </mesh>
-                <Text position={[-0.8, 0, 0.01]} fontSize={0.1} color="white">{d.v}</Text>
-                <Text position={[-0.4, 0, 0.01]} fontSize={0.08} color="#1e293b" anchorX="left">{d.l}</Text>
-              </group>
-            ))}
-          </group>
         </group>
 
         <group position={[0, 0.5, 0.15]}>
@@ -172,10 +133,6 @@ export function LabRoom() {
             <boxGeometry args={[3.5, 3, 0.05]} />
             <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.1} />
           </mesh>
-          <Text position={[0, 1.3, 0.03]} fontSize={0.15} color="#1e293b" fontWeight="bold">LABORATORY FORMULAS</Text>
-          <Text position={[-1.5, 0.8, 0.03]} fontSize={0.09} color="#334155" anchorX="left" lineHeight={1.5}>
-            {"Molarity: M = n / V (L)\nMolality: m = n / mass solvent (kg)\nDensity: ρ = m / V\nSpecific Heat: q = mcΔT\nIdeal Gas Law: PV = nRT\npH = -log[H+]\nKw = [H+][OH-] = 1.0 x 10^-14"}
-          </Text>
         </group>
       </group>
 
@@ -187,35 +144,7 @@ export function LabRoom() {
         </mesh>
       </group>
 
-      {/* Lighting Setup for Realism */}
-      <ambientLight intensity={0.6} />
-      
-      {/* High-quality overhead panel lights */}
-      <group position={[0, 3.9, 0]}>
-        {[
-          [-4, -4], [0, -4], [4, -4],
-          [-4, 0], [0, 0], [4, 0],
-          [-4, 4], [0, 4], [4, 4]
-        ].map(([x, z], i) => (
-          <group key={i} position={[x, 0, z]}>
-            <mesh>
-              <boxGeometry args={[1.5, 0.1, 0.8]} />
-              <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={2} />
-            </mesh>
-            <rectAreaLight 
-              width={1.5} 
-              height={0.8} 
-              intensity={2} 
-              color="#ffffff" 
-              position={[0, -0.1, 0]} 
-              rotation={[-Math.PI / 2, 0, 0]} 
-            />
-          </group>
-        ))}
-      </group>
-
-      {/* Subtle environment probes for reflections */}
-      <pointLight position={[0, 3, 0]} intensity={0.5} distance={15} color="#f8fafc" />
+      <pointLight position={[0, 3, 0]} intensity={0.2} distance={15} color="#f8fafc" />
     </group>
   );
 }
