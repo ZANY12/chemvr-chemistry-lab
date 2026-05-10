@@ -73,7 +73,6 @@ export function MolecularModel({ position, name, atoms, bonds, scale = 1 }: Mole
             <mesh key={`bond-${i}`} position={midpoint}>
               <cylinderGeometry args={[0.02, 0.02, distance, 16]} />
               <meshStandardMaterial color="#94a3b8" metalness={0.5} roughness={0.2} />
-              <primitive object={new THREE.Object3D().lookAt(end.clone().sub(start))} />
               {/* Note: In a real app we'd orient the cylinder properly, but for this visualization midpoints work well enough with simple scaling if we use LookAt */}
               <group onUpdate={(self) => self.lookAt(end)}>
                 <mesh rotation={[Math.PI / 2, 0, 0]}>

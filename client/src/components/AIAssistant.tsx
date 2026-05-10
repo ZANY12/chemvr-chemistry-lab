@@ -6,11 +6,13 @@ import { aiPhysics } from '../lib/aiPhysicsEngine';
 
 interface AIAssistantProps {
   currentStep: number;
+  experimentId?: string | null;
+  stepTitle?: string | null;
   apparatusInUse: string | null;
   recentAction: string | null;
 }
 
-export function AIAssistant({ currentStep, apparatusInUse, recentAction }: AIAssistantProps) {
+export function AIAssistant({ currentStep, experimentId, stepTitle, apparatusInUse, recentAction }: AIAssistantProps) {
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [isExpanded, setIsExpanded] = useState(true);
@@ -19,57 +21,106 @@ export function AIAssistant({ currentStep, apparatusInUse, recentAction }: AIAss
   useEffect(() => {
     // AI analyzes current situation and provides guidance
     analyzeCurrentSituation();
-  }, [currentStep, apparatusInUse, recentAction]);
+  }, [currentStep, experimentId, stepTitle, apparatusInUse, recentAction]);
 
   const analyzeCurrentSituation = () => {
     const suggestions: string[] = [];
     let analysis = '';
 
-    // AI provides step-specific guidance
-    switch (currentStep) {
-      case 0:
-        analysis = '🤖 AI Safety Analysis: Preparing laboratory environment...';
-        suggestions.push('✅ Ensure all PPE is worn before proceeding');
-        suggestions.push('🔍 AI detected: Safety goggles, lab coat, and gloves required');
-        suggestions.push('📊 Safety compliance: 0/3 items');
-        break;
+    if (experimentId === 'acidity-testing') {
+      analysis = `AI Guidance: ${stepTitle ?? 'Acidity Testing'}`;
 
-      case 1:
-        analysis = '🤖 AI Setup Analysis: Analyzing distillation apparatus...';
-        suggestions.push('🧪 AI recommends: Ensure all joints are properly sealed');
-        suggestions.push('⚗️ Connect condenser cooling water (bottom to top)');
-        suggestions.push('📏 AI tip: Add boiling chips to prevent bumping');
-        break;
+      switch (currentStep) {
+        case 0:
+          suggestions.push('Ensure goggles, lab coat, and gloves are worn before handling any solutions.');
+          suggestions.push('Use clean glassware to avoid cross-contamination between unknowns.');
+          break;
+        case 1:
+          suggestions.push('Confirm Unknown A, B, and C are in separate beakers and clearly labeled.');
+          suggestions.push('Keep pH paper dry until use.');
+          break;
+        case 2:
+          suggestions.push('Dip pH paper briefly, then compare to the chart immediately.');
+          suggestions.push('Rinse hands/gloves if you accidentally touch solutions.');
+          break;
+        case 3:
+          suggestions.push('Rinse the pH probe with distilled water between samples.');
+          suggestions.push('Gently blot the probe—do not wipe (reduces static/measurement drift).');
+          break;
+        case 4:
+          suggestions.push('Blue litmus turns red in acids; red litmus turns blue in bases.');
+          suggestions.push('If litmus is unchanged, the sample may be near-neutral.');
+          break;
+        case 5:
+          suggestions.push('Add indicator dropwise; swirl gently for uniform color.');
+          suggestions.push('Compare against the universal indicator color chart for pH estimate.');
+          break;
+        case 6:
+          suggestions.push('Record pH values for A/B/C and classify: acidic (<7), neutral (=7), basic (>7).');
+          suggestions.push('Double-check any outliers by repeating the measurement.');
+          break;
+        case 7:
+          suggestions.push('Dispose solutions in the correct waste container and rinse glassware thoroughly.');
+          suggestions.push('Remove PPE only after cleanup is complete.');
+          break;
+        default:
+          suggestions.push('Select a solution (Unknown A/B/C) to generate AI pH analysis and progress updates.');
+          break;
+      }
 
-      case 2:
-        analysis = '🤖 AI Physics Simulation: Monitoring heating process...';
-        suggestions.push('🎯 AI guidance: Heat gently and gradually');
-        suggestions.push('🌡️ Monitor temperature: Ethanol boils at 78°C');
-        suggestions.push('💧 AI predicts: First drops appear at ~75-78°C');
-        break;
+      const molecular = aiPhysics.predictMolecularBehavior(
+        ['H3O+', 'OH-'],
+        { temperature: 25, pressure: 1 },
+      );
+      suggestions.push(...molecular.insights.map((i) => `AI Physics: ${i}`));
+    } else {
 
-      case 3:
-        analysis = '🤖 AI Distillation Monitoring: Real-time analysis active...';
-        const prediction = aiChemistry.predictReaction(
-          ['Water', 'Ethanol'],
-          { temperature: 78, concentration: 0.5, volume: 50 }
-        );
-        suggestions.push(`⚡ Separation efficiency: ${(prediction.probability * 100).toFixed(1)}%`);
-        suggestions.push(`🎨 Expected: Clear, colorless distillate`);
-        suggestions.push(`🌡️ Boiling point range: 78-82°C`);
-        break;
+      // AI provides step-specific guidance
+      switch (currentStep) {
+        case 0:
+          analysis = '🤖 AI Safety Analysis: Preparing laboratory environment...';
+          suggestions.push('✅ Ensure all PPE is worn before proceeding');
+          suggestions.push('🔍 AI detected: Safety goggles, lab coat, and gloves required');
+          suggestions.push('📊 Safety compliance: 0/3 items');
+          break;
 
-      case 4:
-        analysis = '🤖 AI Analytics: Analyzing distillation results...';
-        suggestions.push(`📊 AI estimates: ~40-45% ethanol recovery`);
-        suggestions.push(`✅ Purity prediction: 85-90% ethanol`);
-        suggestions.push(`🎯 Boiling point accuracy: ±2°C`);
-        break;
+        case 1:
+          analysis = '🤖 AI Setup Analysis: Analyzing distillation apparatus...';
+          suggestions.push('🧪 AI recommends: Ensure all joints are properly sealed');
+          suggestions.push('⚗️ Connect condenser cooling water (bottom to top)');
+          suggestions.push('📏 AI tip: Add boiling chips to prevent bumping');
+          break;
 
-      default:
-        analysis = '🤖 AI Assistant: Ready to help with your experiment';
-        suggestions.push('💡 Click on apparatus for AI-powered guidance');
-        suggestions.push('🔬 AI will analyze each action in real-time');
+        case 2:
+          analysis = '🤖 AI Physics Simulation: Monitoring heating process...';
+          suggestions.push('🎯 AI guidance: Heat gently and gradually');
+          suggestions.push('🌡️ Monitor temperature: Ethanol boils at 78°C');
+          suggestions.push('💧 AI predicts: First drops appear at ~75-78°C');
+          break;
+
+        case 3:
+          analysis = '🤖 AI Distillation Monitoring: Real-time analysis active...';
+          const prediction = aiChemistry.predictReaction(
+            ['Water', 'Ethanol'],
+            { temperature: 78, concentration: 0.5, volume: 50 }
+          );
+          suggestions.push(`⚡ Separation efficiency: ${(prediction.probability * 100).toFixed(1)}%`);
+          suggestions.push(`🎨 Expected: Clear, colorless distillate`);
+          suggestions.push(`🌡️ Boiling point range: 78-82°C`);
+          break;
+
+        case 4:
+          analysis = '🤖 AI Analytics: Analyzing distillation results...';
+          suggestions.push(`📊 AI estimates: ~40-45% ethanol recovery`);
+          suggestions.push(`✅ Purity prediction: 85-90% ethanol`);
+          suggestions.push(`🎯 Boiling point accuracy: ±2°C`);
+          break;
+
+        default:
+          analysis = '🤖 AI Assistant: Ready to help with your experiment';
+          suggestions.push('💡 Click on apparatus for AI-powered guidance');
+          suggestions.push('🔬 AI will analyze each action in real-time');
+      }
     }
 
     // AI analyzes apparatus usage

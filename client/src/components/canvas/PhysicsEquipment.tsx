@@ -151,7 +151,7 @@ export function PhysicsLabItem({
       mass={mass}
       linearDamping={0.5}
       angularDamping={0.5}
-      type={grabbed ? 'kinematicPosition' : 'dynamic'}
+      type={grabbed ? 'kinematicPosition' : 'fixed'}
       colliders={false}
     >
       {/* Larger collider for easier grabbing */}

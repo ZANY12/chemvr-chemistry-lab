@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useRef } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Controllers, Hands, VRButton, XR } from '@react-three/xr';
 import { PerspectiveCamera, Text } from '@react-three/drei';
@@ -111,7 +111,7 @@ function DraggableApparatus({
 }
 
 export function Scene({ onInteract }: SceneProps) {
-  const { completeStep, currentStepIndex, currentExperiment } = useLabTraining();
+  const { completeStep, currentStepIndex, currentExperiment, experimentSteps, recordMeasurement, gogglesOn, labCoatOn, glovesOn, canProceed, getCurrentStep } = useLabTraining();
   
   // Determine which apparatus to show based on experiment
   const getExperimentApparatus = () => {
@@ -137,6 +137,9 @@ export function Scene({ onInteract }: SceneProps) {
   const [showReport, setShowReport] = useState(false);
   const [completedSession, setCompletedSession] = useState<ExperimentSession | null>(null);
   const [sessionStarted, setSessionStarted] = useState(false);
+  const [acidityReadings, setAcidityReadings] = useState<Record<string, number>>({});
+  const activeExperimentRef = useRef<string | null>(null);
+  const completedStepIdsRef = useRef<Set<string>>(new Set());
   
   // Refs for apparatus RigidBodies
   const buretteRef = useRef<RapierRigidBody>(null);
@@ -144,29 +147,72 @@ export function Scene({ onInteract }: SceneProps) {
   const beakerRef = useRef<RapierRigidBody>(null);
   const cylinderRef = useRef<RapierRigidBody>(null);
 
-  // Initialize session on mount
-  React.useEffect(() => {
-    if (!sessionStarted) {
-      progressTracker.startSession('Simple Distillation', 'Student');
-      progressTracker.startStep('step_0', 'Safety Check - Wear PPE');
-      setSessionStarted(true);
-    }
-  }, [sessionStarted]);
+  const experimentDisplayName = useMemo(() => {
+    if (!currentExperiment) return null;
+    if (currentExperiment === 'acidity-testing') return 'Acidity Testing';
+    if (currentExperiment === 'chemical-reaction-test') return 'Chemical Reaction Test';
+    if (currentExperiment.includes('titration')) return 'Acid-Base Titration';
+    return currentExperiment;
+  }, [currentExperiment]);
 
-  // Track step changes
-  React.useEffect(() => {
-    const stepNames = [
-      'Safety Check - Wear PPE',
-      'Set Up Distillation Apparatus',
-      'Heat the Mixture',
-      'Collect Distillate',
-      'Record Observations'
-    ];
-    
-    if (currentStepIndex >= 0 && currentStepIndex < stepNames.length) {
-      progressTracker.startStep(`step_${currentStepIndex}`, stepNames[currentStepIndex]);
+  // Start a new progress-tracking session whenever a new experiment starts.
+  useEffect(() => {
+    if (!currentExperiment || experimentSteps.length === 0) {
+      activeExperimentRef.current = null;
+      setSessionStarted(false);
+      completedStepIdsRef.current = new Set();
+      return;
     }
-  }, [currentStepIndex]);
+
+    if (activeExperimentRef.current !== currentExperiment) {
+      // End any previous session if it exists
+      const prevSession = progressTracker.endSession();
+      if (prevSession) {
+        setCompletedSession(prevSession);
+        setShowReport(true);
+      }
+
+      progressTracker.startSession(experimentDisplayName ?? currentExperiment, 'Student');
+      activeExperimentRef.current = currentExperiment;
+      setSessionStarted(true);
+      completedStepIdsRef.current = new Set();
+
+      const firstStep = experimentSteps[0];
+      if (firstStep) {
+        progressTracker.startStep(firstStep.id, firstStep.title);
+      }
+    }
+  }, [currentExperiment, experimentSteps, experimentDisplayName]);
+
+  // Track step changes for the active experiment.
+  useEffect(() => {
+    if (!sessionStarted || !currentExperiment) return;
+    const step = experimentSteps[currentStepIndex];
+    if (!step) return;
+    progressTracker.startStep(step.id, step.title);
+  }, [currentStepIndex, currentExperiment, experimentSteps, sessionStarted]);
+
+  // Detect and record step completions into the progress tracker.
+  useEffect(() => {
+    if (!sessionStarted || !currentExperiment) return;
+    for (const step of experimentSteps) {
+      if (step.completed && !completedStepIdsRef.current.has(step.id)) {
+        completedStepIdsRef.current.add(step.id);
+        progressTracker.completeStep(step.id, true);
+      }
+    }
+  }, [experimentSteps, currentExperiment, sessionStarted]);
+
+  useEffect(() => {
+    if (!currentExperiment) return;
+    const step = getCurrentStep();
+    if (!step || step.completed) return;
+    if (!step.ppeRequired?.length) return;
+
+    if (canProceed()) {
+      completeStep(step.id);
+    }
+  }, [canProceed, completeStep, currentExperiment, getCurrentStep, gogglesOn, glovesOn, labCoatOn]);
 
   const handleFlaskClick = () => {
     setSelectedApparatus("Conical Flask");
@@ -194,10 +240,10 @@ export function Scene({ onInteract }: SceneProps) {
     }));
     setRecentAction(`Grabbed ${apparatus}`);
     
-    // Track action
-    if (apparatus !== 'Beaker' && apparatus !== 'Graduated Cylinder') {
-      // Correct apparatus for current step
-      progressTracker.completeStep(`step_${currentStepIndex}`, true);
+    // Basic completion trigger: grabbing apparatus counts as progress only if the current step is an equipment/setup step.
+    const step = experimentSteps[currentStepIndex];
+    if (step && !step.completed && step.equipmentRequired?.length) {
+      completeStep(step.id);
     }
   };
   
@@ -266,6 +312,38 @@ export function Scene({ onInteract }: SceneProps) {
       setShowReport(true);
     }
   };
+
+  const maybeRecordAcidityMeasurement = (target: string) => {
+    if (currentExperiment !== 'acidity-testing') return;
+    if (target !== 'Unknown A' && target !== 'Unknown B' && target !== 'Unknown C') return;
+
+    // Lazy import to avoid making Scene.tsx depend on the AI engine at module init.
+    import('../lib/aiChemistryEngine').then(({ aiChemistry }) => {
+      const analysis = aiChemistry.analyzepH(target);
+      recordMeasurement('pH', analysis.pH, 'pH');
+
+      setAcidityReadings((prev) => ({
+        ...prev,
+        [target]: analysis.pH,
+      }));
+
+      // Auto-complete measurement steps when the user interacts with a solution during those steps.
+      const step = experimentSteps[currentStepIndex];
+      if (step && !step.completed && (step.id === 'acidity-3' || step.id === 'acidity-4' || step.id === 'acidity-5' || step.id === 'acidity-6')) {
+        completeStep(step.id);
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (currentExperiment !== 'acidity-testing') return;
+    const hasAll = typeof acidityReadings['Unknown A'] === 'number' && typeof acidityReadings['Unknown B'] === 'number' && typeof acidityReadings['Unknown C'] === 'number';
+    if (!hasAll) return;
+    const step = experimentSteps[currentStepIndex];
+    if (step && !step.completed && step.id === 'acidity-7') {
+      completeStep(step.id);
+    }
+  }, [acidityReadings, completeStep, currentExperiment, currentStepIndex, experimentSteps]);
   
   // Check if burette is positioned over flask
   const checkProximity = (apparatus: string, position: [number, number, number]) => {
@@ -346,6 +424,8 @@ export function Scene({ onInteract }: SceneProps) {
       {/* AI Assistant - Real-time guidance */}
       <AIAssistant
         currentStep={currentStepIndex}
+        experimentId={currentExperiment}
+        stepTitle={experimentSteps[currentStepIndex]?.title ?? null}
         apparatusInUse={grabbedApparatus}
         recentAction={recentAction}
       />
@@ -528,7 +608,10 @@ export function Scene({ onInteract }: SceneProps) {
                   mass={0.2}
                   fillLevel={0.6}
                   liquidColor="#fca5a5"
-                  onSelect={() => onInteract("Unknown A")}
+                  onSelect={() => {
+                    onInteract("Unknown A");
+                    maybeRecordAcidityMeasurement('Unknown A');
+                  }}
                 />
                 
                 {/* Neutral Solution (Unknown B) */}
@@ -540,7 +623,10 @@ export function Scene({ onInteract }: SceneProps) {
                   mass={0.2}
                   fillLevel={0.6}
                   liquidColor="#bae6fd"
-                  onSelect={() => onInteract("Unknown B")}
+                  onSelect={() => {
+                    onInteract("Unknown B");
+                    maybeRecordAcidityMeasurement('Unknown B');
+                  }}
                 />
                 
                 {/* Alkaline Solution (Unknown C) */}
@@ -552,7 +638,10 @@ export function Scene({ onInteract }: SceneProps) {
                   mass={0.2}
                   fillLevel={0.6}
                   liquidColor="#bbf7d0"
-                  onSelect={() => onInteract("Unknown C")}
+                  onSelect={() => {
+                    onInteract("Unknown C");
+                    maybeRecordAcidityMeasurement('Unknown C');
+                  }}
                 />
                 
                 {/* pH Paper Strips */}
