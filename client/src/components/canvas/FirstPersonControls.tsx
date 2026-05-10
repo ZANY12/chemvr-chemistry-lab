@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useXR } from '@react-three/xr';
+import { useController, useXR } from '@react-three/xr';
 import * as THREE from 'three';
 
 interface FirstPersonControlsProps {
@@ -210,53 +210,69 @@ export function VRLocomotion({
 }) {
   const { camera } = useThree();
   const { isPresenting, player } = useXR();
-  
-  const leftStick = useRef({ x: 0, y: 0 });
-  const rightStick = useRef({ x: 0, y: 0 });
 
+  const leftController = useController('left');
+  const rightController = useController('right');
+  
   const moveVector = useRef(new THREE.Vector3());
   const forwardVec = useRef(new THREE.Vector3());
   const rightVec = useRef(new THREE.Vector3());
 
+  const snapTurnCooldownUntilMs = useRef(0);
+
+  const getAxes = (source: any): number[] => {
+    const axes = source?.inputSource?.gamepad?.axes;
+    return Array.isArray(axes) ? axes : [];
+  };
+
+  const applyDeadzone = (v: number, deadzone: number) => {
+    if (Math.abs(v) < deadzone) return 0;
+    return v;
+  };
+
   useFrame((state, delta) => {
     if (!isPresenting || !smoothMovementEnabled) return;
 
-    // Get controller input (this is a simplified version)
-    // In a real implementation, you'd access the gamepad API through XR controllers
-    
     const mv = moveVector.current;
     mv.set(0, 0, 0);
-    
-    // Left stick for movement
-    if (Math.abs(leftStick.current.x) > 0.1 || Math.abs(leftStick.current.y) > 0.1) {
+
+    const leftAxes = getAxes(leftController);
+    const rightAxes = getAxes(rightController);
+
+    const lx = applyDeadzone(leftAxes[0] ?? 0, 0.15);
+    const ly = applyDeadzone(leftAxes[1] ?? 0, 0.15);
+    const rx = applyDeadzone(rightAxes[2] ?? rightAxes[0] ?? 0, 0.25);
+
+    if (lx !== 0 || ly !== 0) {
       const forward = forwardVec.current;
       const right = rightVec.current;
 
       forward.set(0, 0, -1);
       right.set(1, 0, 0);
-      
+
       forward.applyQuaternion(camera.quaternion);
       right.applyQuaternion(camera.quaternion);
-      
+
       forward.y = 0;
       right.y = 0;
       forward.normalize();
       right.normalize();
-      
-      mv.add(forward.multiplyScalar(-leftStick.current.y * moveSpeed * delta));
-      mv.add(right.multiplyScalar(leftStick.current.x * moveSpeed * delta));
-      
+
+      mv.add(forward.multiplyScalar(-ly * moveSpeed * delta));
+      mv.add(right.multiplyScalar(lx * moveSpeed * delta));
+
       if (player) {
         player.position.add(mv);
       }
     }
-    
-    // Right stick for snap turning (optional)
-    if (Math.abs(rightStick.current.x) > 0.8) {
-      const turnAmount = Math.sign(rightStick.current.x) * Math.PI / 4; // 45 degree turns
+
+    const now = performance.now();
+    if (Math.abs(rx) > 0.75 && now >= snapTurnCooldownUntilMs.current) {
+      const turnAmount = Math.sign(rx) * Math.PI / 6;
       if (player) {
         player.rotation.y += turnAmount;
       }
+      snapTurnCooldownUntilMs.current = now + 250;
     }
   });
 
