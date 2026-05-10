@@ -31,6 +31,10 @@ export function FirstPersonControls({
   const euler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const pointerLocked = useRef(false);
 
+  const forwardVec = useRef(new THREE.Vector3());
+  const rightVec = useRef(new THREE.Vector3());
+  const movementVec = useRef(new THREE.Vector3());
+
   useEffect(() => {
     if (isPresenting || !enabled) return;
 
@@ -163,10 +167,12 @@ export function FirstPersonControls({
 
     // Apply movement if any keys are pressed
     if (moveX !== 0 || moveZ !== 0 || moveY !== 0) {
-      // Get camera direction vectors
-      const forward = new THREE.Vector3();
-      const right = new THREE.Vector3();
-      
+      const forward = forwardVec.current;
+      const right = rightVec.current;
+      const movement = movementVec.current;
+
+      movement.set(0, 0, 0);
+
       camera.getWorldDirection(forward);
       right.crossVectors(camera.up, forward).normalize();
       forward.normalize();
@@ -177,8 +183,6 @@ export function FirstPersonControls({
       right.y = 0;
       right.normalize();
       
-      // Calculate final movement vector
-      const movement = new THREE.Vector3();
       movement.add(forward.multiplyScalar(-moveZ * actualMoveSpeed));
       movement.add(right.multiplyScalar(moveX * actualMoveSpeed));
       movement.y = moveY * actualMoveSpeed;
@@ -210,18 +214,26 @@ export function VRLocomotion({
   const leftStick = useRef({ x: 0, y: 0 });
   const rightStick = useRef({ x: 0, y: 0 });
 
+  const moveVector = useRef(new THREE.Vector3());
+  const forwardVec = useRef(new THREE.Vector3());
+  const rightVec = useRef(new THREE.Vector3());
+
   useFrame((state, delta) => {
     if (!isPresenting || !smoothMovementEnabled) return;
 
     // Get controller input (this is a simplified version)
     // In a real implementation, you'd access the gamepad API through XR controllers
     
-    const moveVector = new THREE.Vector3();
+    const mv = moveVector.current;
+    mv.set(0, 0, 0);
     
     // Left stick for movement
     if (Math.abs(leftStick.current.x) > 0.1 || Math.abs(leftStick.current.y) > 0.1) {
-      const forward = new THREE.Vector3(0, 0, -1);
-      const right = new THREE.Vector3(1, 0, 0);
+      const forward = forwardVec.current;
+      const right = rightVec.current;
+
+      forward.set(0, 0, -1);
+      right.set(1, 0, 0);
       
       forward.applyQuaternion(camera.quaternion);
       right.applyQuaternion(camera.quaternion);
@@ -231,11 +243,11 @@ export function VRLocomotion({
       forward.normalize();
       right.normalize();
       
-      moveVector.add(forward.multiplyScalar(-leftStick.current.y * moveSpeed * delta));
-      moveVector.add(right.multiplyScalar(leftStick.current.x * moveSpeed * delta));
+      mv.add(forward.multiplyScalar(-leftStick.current.y * moveSpeed * delta));
+      mv.add(right.multiplyScalar(leftStick.current.x * moveSpeed * delta));
       
       if (player) {
-        player.position.add(moveVector);
+        player.position.add(mv);
       }
     }
     

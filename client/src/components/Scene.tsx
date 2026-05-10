@@ -520,7 +520,7 @@ export function Scene({ onInteract }: SceneProps) {
               onProximityCheck={checkProximity}
             />
             
-            <Physics gravity={[0, -9.81, 0]} timeStep={1/30} paused={false} interpolate={false}>
+            <Physics gravity={[0, -9.81, 0]} timeStep={1/60} paused={false} interpolate={true}>
 
             <LabRoom />
 
