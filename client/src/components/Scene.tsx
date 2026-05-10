@@ -501,8 +501,8 @@ export function Scene({ onInteract }: SceneProps) {
             <directionalLight position={[5, 5, 5]} intensity={0.6} />
             
             {/* First-person navigation controls */}
-            <FirstPersonControls moveSpeed={5.0} />
-            <VRLocomotion moveSpeed={3.0} />
+            <FirstPersonControls moveSpeed={8.0} lookSpeed={0.0035} />
+            <VRLocomotion moveSpeed={3.5} />
             <PerformanceMonitor />
             
             {/* Mouse tracking for drag functionality */}
