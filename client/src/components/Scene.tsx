@@ -479,7 +479,7 @@ export function Scene({ onInteract }: SceneProps) {
 
       <Canvas 
         shadows={false}
-        dpr={[0.5, 1]}
+        dpr={[0.25, 0.75]}
         performance={{ min: 0.1, max: 1, debounce: 200 }}
         gl={{ 
           antialias: false, 
@@ -501,7 +501,7 @@ export function Scene({ onInteract }: SceneProps) {
             <directionalLight position={[5, 5, 5]} intensity={0.6} />
             
             {/* First-person navigation controls */}
-            <FirstPersonControls moveSpeed={8.0} lookSpeed={0.0035} />
+            <FirstPersonControls moveSpeed={15.0} lookSpeed={0.006} />
             <VRLocomotion moveSpeed={3.5} />
             <PerformanceMonitor />
             
