@@ -161,7 +161,19 @@ export function PhysicsLabItem({
         onHover={() => setHovered(true)}
         onBlur={() => setHovered(false)}
       >
-        <group ref={meshRef}>
+        <group
+          ref={meshRef}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            onSelect?.();
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.();
+          }}
+        >
           {/* Glow effect when hoverable */}
           {hovered && !grabbed && (
             <mesh position={[0, dimensions.height / 2, 0]}>
