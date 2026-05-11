@@ -14,6 +14,10 @@ interface PhysicsLabItemProps {
   mass?: number;
   fillLevel?: number;
   liquidColor?: string;
+  highlight?: boolean;
+  forcePouring?: boolean;
+  isDragging?: boolean;
+  dragPosition?: [number, number, number] | null;
   onSelect?: () => void;
   onPour?: (amount: number) => void;
 }
@@ -26,6 +30,10 @@ export function PhysicsLabItem({
   mass = 0.2,
   fillLevel: initialFill = 0.7,
   liquidColor: initialLiquidColor,
+  highlight = false,
+  forcePouring = false,
+  isDragging = false,
+  dragPosition = null,
   onSelect,
   onPour,
 }: PhysicsLabItemProps) {
@@ -120,6 +128,15 @@ export function PhysicsLabItem({
         rigidBodyRef.current.setRotation(gripQuat, true);
       }
     }
+
+    // Desktop drag override (menu-driven dragging)
+    if (!grabbed && isDragging && dragPosition && rigidBodyRef.current) {
+      rigidBodyRef.current.setNextKinematicTranslation({
+        x: dragPosition[0],
+        y: dragPosition[1],
+        z: dragPosition[2],
+      });
+    }
   });
 
   const GlassMaterial = () => (
@@ -151,7 +168,7 @@ export function PhysicsLabItem({
       mass={mass}
       linearDamping={0.5}
       angularDamping={0.5}
-      type={grabbed ? 'kinematicPosition' : 'fixed'}
+      type={grabbed || isDragging ? 'kinematicPosition' : 'fixed'}
       colliders={false}
     >
       {/* Larger collider for easier grabbing */}
@@ -179,6 +196,13 @@ export function PhysicsLabItem({
             <mesh position={[0, dimensions.height / 2, 0]}>
               <cylinderGeometry args={[dimensions.radius * 1.2, dimensions.radius * 1.2, dimensions.height * 1.1, 32]} />
               <meshBasicMaterial color="#06b6d4" transparent opacity={0.2} />
+            </mesh>
+          )}
+
+          {highlight && (
+            <mesh position={[0, dimensions.height / 2, 0]}>
+              <cylinderGeometry args={[dimensions.radius * 1.35, dimensions.radius * 1.35, dimensions.height * 1.15, 32]} />
+              <meshBasicMaterial color="#fbbf24" transparent opacity={0.25} />
             </mesh>
           )}
           
@@ -293,7 +317,7 @@ export function PhysicsLabItem({
           )}
 
           {/* Pour stream effect */}
-          {isPouring && (
+          {(isPouring || forcePouring) && (
             <group>
               <mesh position={[0, -dimensions.height / 2, dimensions.radius]} rotation={[Math.PI / 2, 0, 0]}>
                 <cylinderGeometry args={[0.005, 0.008, 0.3]} />

@@ -42,22 +42,14 @@ export function ApparatusMenu({
             
             <div className="space-y-2">
               <Button
-                onClick={onGrab}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-                disabled={isGrabbed}
-              >
-                {isGrabbed ? '✅ Grabbed' : '🤲 Grab'}
-              </Button>
-              
-              <Button
                 onClick={onDrag}
                 className={`w-full ${
-                  isDragging 
-                    ? 'bg-yellow-700 hover:bg-yellow-800' 
-                    : 'bg-yellow-600 hover:bg-yellow-700'
+                  isDragging
+                    ? 'bg-yellow-700 hover:bg-yellow-800'
+                    : 'bg-green-600 hover:bg-green-700'
                 } text-white`}
               >
-                {isDragging ? '🔒 Stop Dragging' : '🖐️ Drag'}
+                {isDragging ? '🔒 Stop Dragging' : '🖐️ Start Drag'}
               </Button>
               
               <Button

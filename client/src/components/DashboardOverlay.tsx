@@ -11,6 +11,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { insertExperimentSchema } from '@shared/schema';
+import { useLabTraining } from '@/lib/labTrainingSystem';
 
 interface DashboardOverlayProps {
   lastInteraction: string | null;
@@ -21,6 +22,9 @@ export function DashboardOverlay({ lastInteraction }: DashboardOverlayProps) {
   const { data: experiments, isLoading } = useExperiments();
   const { toast } = useToast();
   const createExperiment = useCreateExperiment();
+
+  const { currentExperiment, experimentSteps, currentStepIndex, getCurrentStep } = useLabTraining();
+  const currentStep = getCurrentStep();
   
   const form = useForm<z.infer<typeof insertExperimentSchema>>({
     resolver: zodResolver(insertExperimentSchema),
@@ -65,6 +69,23 @@ export function DashboardOverlay({ lastInteraction }: DashboardOverlayProps) {
                <span className="font-mono">22.4°C</span>
              </div>
           </div>
+        </div>
+
+        <div className="glass-panel p-4 w-80 border border-white/5">
+          <h3 className="text-xs font-bold text-muted-foreground uppercase mb-2">Current Step</h3>
+          <div className="text-sm font-semibold text-foreground">
+            {currentExperiment ? (currentStep?.title ?? 'In progress') : 'Select an experiment to begin'}
+          </div>
+          {!!currentStep?.description && (
+            <div className="mt-1 text-xs text-muted-foreground">
+              {currentStep.description}
+            </div>
+          )}
+          {currentExperiment && experimentSteps.length > 0 && (
+            <div className="mt-2 text-[11px] text-muted-foreground font-mono">
+              Step {Math.min(currentStepIndex + 1, experimentSteps.length)} / {experimentSteps.length}
+            </div>
+          )}
         </div>
 
         {/* Interaction Log */}

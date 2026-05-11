@@ -129,6 +129,8 @@ export function Scene({ onInteract }: SceneProps) {
   const [selectedApparatus, setSelectedApparatus] = useState<string | null>(null);
   const [grabbedApparatus, setGrabbedApparatus] = useState<string | null>(null);
   const [draggingApparatus, setDraggingApparatus] = useState<string | null>(null);
+  const [pourSource, setPourSource] = useState<string | null>(null);
+  const [isSelectingPourTarget, setIsSelectingPourTarget] = useState(false);
   const [apparatusStates, setApparatusStates] = useState<Record<string, { grabbed: boolean; pouring: boolean; dragging: boolean }>>({});
   const [dragPositions, setDragPositions] = useState<Record<string, [number, number, number]>>({});
   const [targetDragPositions, setTargetDragPositions] = useState<Record<string, [number, number, number]>>({});
@@ -140,6 +142,25 @@ export function Scene({ onInteract }: SceneProps) {
   const [acidityReadings, setAcidityReadings] = useState<Record<string, number>>({});
   const activeExperimentRef = useRef<string | null>(null);
   const completedStepIdsRef = useRef<Set<string>>(new Set());
+
+  const itemSpawnPositions = useMemo<Record<string, [number, number, number]>>(() => ({
+    'Burette': [1.9, 1.35, -1.5],
+    'Conical Flask': [1.3, 1.15, -1.5],
+    'Beaker': [-0.5, 1.15, -1.5],
+    'Graduated Cylinder': [0.8, 1.15, -1.5],
+
+    'HCl (Hydrochloric Acid)': [-0.8, 1.1, -1.5],
+    'Sodium Hydroxide (NaOH)': [-0.3, 1.1, -1.5],
+    'Phenolphthalein Indicator': [0.2, 1.1, -1.5],
+    'Distilled Water': [0.7, 1.1, -1.5],
+
+    'Unknown Solution A (Acidic)': [-0.9, 1.1, -1.5],
+    'Unknown Solution B (Neutral)': [-0.3, 1.1, -1.5],
+    'Unknown Solution C (Alkaline)': [0.3, 1.1, -1.5],
+
+    'Hydrogen Peroxide (H₂O₂) 3%': [-0.8, 1.1, -1.5],
+    'Potassium Permanganate (KMnO₄)': [-0.2, 1.1, -1.5],
+  }), []);
   
   // Refs for apparatus RigidBodies
   const buretteRef = useRef<RapierRigidBody>(null);
@@ -214,22 +235,62 @@ export function Scene({ onInteract }: SceneProps) {
     }
   }, [canProceed, completeStep, currentExperiment, getCurrentStep, gogglesOn, glovesOn, labCoatOn]);
 
+  const cancelPourTargeting = () => {
+    setIsSelectingPourTarget(false);
+    setPourSource(null);
+  };
+
+  const completePour = (source: string, target: string) => {
+    setRecentAction(`Pouring from ${source} into ${target}`);
+
+    setApparatusStates(prev => ({
+      ...prev,
+      [source]: { ...(prev[source] ?? { grabbed: false, pouring: false, dragging: false }), pouring: true }
+    }));
+
+    const incidentId = progressTracker.logIncident(
+      'splash',
+      `Pouring from ${source} into ${target}`,
+      'minor'
+    );
+
+    setTimeout(() => {
+      setApparatusStates(prev => ({
+        ...prev,
+        [source]: { ...(prev[source] ?? { grabbed: false, pouring: false, dragging: false }), pouring: false }
+      }));
+
+      progressTracker.respondToIncident(incidentId);
+      progressTracker.resolveIncident(incidentId);
+    }, 2000);
+  };
+
+  const handleItemClick = (itemName: string, interactionName?: string) => {
+    if (isSelectingPourTarget && pourSource) {
+      if (itemName !== pourSource) {
+        completePour(pourSource, itemName);
+      }
+      cancelPourTargeting();
+      return;
+    }
+
+    setSelectedApparatus(itemName);
+    onInteract(interactionName ?? itemName);
+  };
+
   const handleFlaskClick = () => {
-    setSelectedApparatus("Conical Flask");
-    onInteract("Conical Flask");
+    handleItemClick("Conical Flask", "Conical Flask");
     if (currentStepIndex === 1) {
       completeStep('titration-2');
     }
   };
 
   const handleBeakerClick = () => {
-    setSelectedApparatus("Beaker");
-    onInteract("Beaker");
+    handleItemClick("Beaker", "Beaker");
   };
 
   const handleCylinderClick = () => {
-    setSelectedApparatus("Graduated Cylinder");
-    onInteract("Graduated Cylinder");
+    handleItemClick("Graduated Cylinder", "Graduated Cylinder");
   };
   
   const handleGrab = (apparatus: string) => {
@@ -255,12 +316,8 @@ export function Scene({ onInteract }: SceneProps) {
       // Starting drag - initialize position
       const currentPos = dragPositions[apparatus];
       if (!currentPos) {
-        // Set initial drag position based on current apparatus position
-        const initialPos: [number, number, number] = 
-          apparatus === "Burette" ? [1.4, 1.8, -1.2] :
-          apparatus === "Conical Flask" ? [0.2, 1.6, -1.2] :
-          apparatus === "Graduated Cylinder" ? [0.8, 1.6, -1.2] :
-          [-0.5, 1.6, -1.2]; // Beaker
+        const spawnPos = itemSpawnPositions[apparatus];
+        const initialPos: [number, number, number] = spawnPos ? [...spawnPos] as [number, number, number] : [0, 1.1, -1.5];
         
         console.log(`📍 Setting initial position for ${apparatus}:`, initialPos);
         setDragPositions(prev => ({
@@ -273,36 +330,16 @@ export function Scene({ onInteract }: SceneProps) {
     setDraggingApparatus(isDragging ? null : apparatus);
     setApparatusStates(prev => ({
       ...prev,
-      [apparatus]: { ...prev[apparatus], dragging: !isDragging }
+      [apparatus]: { ...(prev[apparatus] ?? { grabbed: false, pouring: false, dragging: false }), dragging: !isDragging }
     }));
     console.log(`✅ Drag state updated: ${apparatus} dragging = ${!isDragging}`);
     setRecentAction(isDragging ? `Stopped dragging ${apparatus}` : `Started dragging ${apparatus}`);
   };
   
   const handlePour = (apparatus: string) => {
-    setApparatusStates(prev => ({
-      ...prev,
-      [apparatus]: { ...prev[apparatus], pouring: true }
-    }));
-    setRecentAction(`Pouring from ${apparatus}`);
-    
-    // Log potential incident if pouring too fast
-    const incidentId = progressTracker.logIncident(
-      'splash',
-      `Pouring from ${apparatus}`,
-      'minor'
-    );
-    
-    setTimeout(() => {
-      setApparatusStates(prev => ({
-        ...prev,
-        [apparatus]: { ...prev[apparatus], pouring: false }
-      }));
-      
-      // Resolve incident after pour completes
-      progressTracker.respondToIncident(incidentId);
-      progressTracker.resolveIncident(incidentId);
-    }, 2000);
+    setPourSource(apparatus);
+    setIsSelectingPourTarget(true);
+    setRecentAction(`Select a target to pour into`);
   };
   
   const handleEndExperiment = () => {
@@ -393,8 +430,7 @@ export function Scene({ onInteract }: SceneProps) {
   };
 
   const handleBuretteClick = () => {
-    setSelectedApparatus("Burette");
-    onInteract("Burette");
+    handleItemClick("Burette", "Burette");
     if (currentStepIndex === 2) {
       completeStep('titration-3');
     }
@@ -407,6 +443,27 @@ export function Scene({ onInteract }: SceneProps) {
       style={{ cursor: draggingApparatus ? 'move' : 'default' }}
     >
       <TrainingOverlay />
+
+      <div className="fixed left-4 top-4 z-40 pointer-events-none">
+        <div className="pointer-events-auto bg-slate-900/40 border border-cyan-500/20 rounded-lg px-4 py-3 backdrop-blur-sm max-w-[320px]">
+          <div className="text-xs text-cyan-300/90 font-semibold">
+            {experimentDisplayName ?? 'Experiment'}
+          </div>
+          <div className="mt-1 text-sm text-white font-semibold">
+            {experimentSteps[currentStepIndex]?.title ?? 'Select an experiment to begin'}
+          </div>
+          {!!experimentSteps[currentStepIndex]?.description && (
+            <div className="mt-1 text-xs text-slate-200/90">
+              {experimentSteps[currentStepIndex]?.description}
+            </div>
+          )}
+          {experimentSteps.length > 0 && (
+            <div className="mt-2 text-[11px] text-slate-200/70">
+              Step {Math.min(currentStepIndex + 1, experimentSteps.length)} / {experimentSteps.length}
+            </div>
+          )}
+        </div>
+      </div>
       
       {selectedApparatus && (
         <ApparatusMenu
@@ -415,7 +472,10 @@ export function Scene({ onInteract }: SceneProps) {
           onPour={() => handlePour(selectedApparatus)}
           onDrag={() => handleDrag(selectedApparatus)}
           onRelease={() => handleRelease(selectedApparatus)}
-          onClose={() => setSelectedApparatus(null)}
+          onClose={() => {
+            setSelectedApparatus(null);
+            cancelPourTargeting();
+          }}
           isGrabbed={apparatusStates[selectedApparatus]?.grabbed || false}
           isDragging={apparatusStates[selectedApparatus]?.dragging || false}
         />
@@ -559,7 +619,11 @@ export function Scene({ onInteract }: SceneProps) {
                   mass={0.3}
                   fillLevel={0.6}
                   liquidColor="#fca5a5"
-                  onSelect={() => onInteract("HCl")}
+                  highlight={isSelectingPourTarget && pourSource !== "HCl (Hydrochloric Acid)"}
+                  forcePouring={apparatusStates["HCl (Hydrochloric Acid)"]?.pouring || false}
+                  isDragging={apparatusStates["HCl (Hydrochloric Acid)"]?.dragging || false}
+                  dragPosition={dragPositions["HCl (Hydrochloric Acid)"] || null}
+                  onSelect={() => handleItemClick("HCl (Hydrochloric Acid)", "HCl")}
                 />
                 
                 {/* NaOH Solution in Graduated Cylinder */}
@@ -571,7 +635,11 @@ export function Scene({ onInteract }: SceneProps) {
                   mass={0.2}
                   fillLevel={0.7}
                   liquidColor="#e9d5ff"
-                  onSelect={() => onInteract("NaOH")}
+                  highlight={isSelectingPourTarget && pourSource !== "Sodium Hydroxide (NaOH)"}
+                  forcePouring={apparatusStates["Sodium Hydroxide (NaOH)"]?.pouring || false}
+                  isDragging={apparatusStates["Sodium Hydroxide (NaOH)"]?.dragging || false}
+                  dragPosition={dragPositions["Sodium Hydroxide (NaOH)"] || null}
+                  onSelect={() => handleItemClick("Sodium Hydroxide (NaOH)", "NaOH")}
                 />
                 
                 {/* Phenolphthalein Indicator */}
@@ -583,7 +651,11 @@ export function Scene({ onInteract }: SceneProps) {
                   mass={0.1}
                   fillLevel={0.3}
                   liquidColor="#fef3c7"
-                  onSelect={() => onInteract("Indicator")}
+                  highlight={isSelectingPourTarget && pourSource !== "Phenolphthalein Indicator"}
+                  forcePouring={apparatusStates["Phenolphthalein Indicator"]?.pouring || false}
+                  isDragging={apparatusStates["Phenolphthalein Indicator"]?.dragging || false}
+                  dragPosition={dragPositions["Phenolphthalein Indicator"] || null}
+                  onSelect={() => handleItemClick("Phenolphthalein Indicator", "Indicator")}
                 />
                 
                 {/* Distilled Water */}
@@ -595,7 +667,11 @@ export function Scene({ onInteract }: SceneProps) {
                   mass={0.25}
                   fillLevel={0.8}
                   liquidColor="#bae6fd"
-                  onSelect={() => onInteract("Water")}
+                  highlight={isSelectingPourTarget && pourSource !== "Distilled Water"}
+                  forcePouring={apparatusStates["Distilled Water"]?.pouring || false}
+                  isDragging={apparatusStates["Distilled Water"]?.dragging || false}
+                  dragPosition={dragPositions["Distilled Water"] || null}
+                  onSelect={() => handleItemClick("Distilled Water", "Water")}
                 />
             
             {/* ACIDITY TESTING EXPERIMENT */}
@@ -609,9 +685,13 @@ export function Scene({ onInteract }: SceneProps) {
                   fillLevel={0.6}
                   liquidColor="#fca5a5"
                   onSelect={() => {
-                    onInteract("Unknown A");
+                    handleItemClick("Unknown Solution A (Acidic)", "Unknown A");
                     maybeRecordAcidityMeasurement('Unknown A');
                   }}
+                  highlight={isSelectingPourTarget && pourSource !== "Unknown Solution A (Acidic)"}
+                  forcePouring={apparatusStates["Unknown Solution A (Acidic)"]?.pouring || false}
+                  isDragging={apparatusStates["Unknown Solution A (Acidic)"]?.dragging || false}
+                  dragPosition={dragPositions["Unknown Solution A (Acidic)"] || null}
                 />
                 
                 {/* Neutral Solution (Unknown B) */}
@@ -624,9 +704,13 @@ export function Scene({ onInteract }: SceneProps) {
                   fillLevel={0.6}
                   liquidColor="#bae6fd"
                   onSelect={() => {
-                    onInteract("Unknown B");
+                    handleItemClick("Unknown Solution B (Neutral)", "Unknown B");
                     maybeRecordAcidityMeasurement('Unknown B');
                   }}
+                  highlight={isSelectingPourTarget && pourSource !== "Unknown Solution B (Neutral)"}
+                  forcePouring={apparatusStates["Unknown Solution B (Neutral)"]?.pouring || false}
+                  isDragging={apparatusStates["Unknown Solution B (Neutral)"]?.dragging || false}
+                  dragPosition={dragPositions["Unknown Solution B (Neutral)"] || null}
                 />
                 
                 {/* Alkaline Solution (Unknown C) */}
@@ -639,9 +723,13 @@ export function Scene({ onInteract }: SceneProps) {
                   fillLevel={0.6}
                   liquidColor="#bbf7d0"
                   onSelect={() => {
-                    onInteract("Unknown C");
+                    handleItemClick("Unknown Solution C (Alkaline)", "Unknown C");
                     maybeRecordAcidityMeasurement('Unknown C');
                   }}
+                  highlight={isSelectingPourTarget && pourSource !== "Unknown Solution C (Alkaline)"}
+                  forcePouring={apparatusStates["Unknown Solution C (Alkaline)"]?.pouring || false}
+                  isDragging={apparatusStates["Unknown Solution C (Alkaline)"]?.dragging || false}
+                  dragPosition={dragPositions["Unknown Solution C (Alkaline)"] || null}
                 />
                 
                 {/* pH Paper Strips */}
@@ -670,7 +758,11 @@ export function Scene({ onInteract }: SceneProps) {
                   mass={0.25}
                   fillLevel={0.5}
                   liquidColor="#dbeafe"
-                  onSelect={() => onInteract("H2O2")}
+                  highlight={isSelectingPourTarget && pourSource !== "Hydrogen Peroxide (H₂O₂) 3%"}
+                  forcePouring={apparatusStates["Hydrogen Peroxide (H₂O₂) 3%"]?.pouring || false}
+                  isDragging={apparatusStates["Hydrogen Peroxide (H₂O₂) 3%"]?.dragging || false}
+                  dragPosition={dragPositions["Hydrogen Peroxide (H₂O₂) 3%"] || null}
+                  onSelect={() => handleItemClick("Hydrogen Peroxide (H₂O₂) 3%", "H2O2")}
                 />
                 
                 {/* Potassium Permanganate (KMnO4) in Small Flask */}
@@ -682,7 +774,11 @@ export function Scene({ onInteract }: SceneProps) {
                   mass={0.15}
                   fillLevel={0.4}
                   liquidColor="#9333ea"
-                  onSelect={() => onInteract("KMnO4")}
+                  highlight={isSelectingPourTarget && pourSource !== "Potassium Permanganate (KMnO₄)"}
+                  forcePouring={apparatusStates["Potassium Permanganate (KMnO₄)"]?.pouring || false}
+                  isDragging={apparatusStates["Potassium Permanganate (KMnO₄)"]?.dragging || false}
+                  dragPosition={dragPositions["Potassium Permanganate (KMnO₄)"] || null}
+                  onSelect={() => handleItemClick("Potassium Permanganate (KMnO₄)", "KMnO4")}
                 />
                 
                 {/* Syringe/Dropper */}
@@ -743,7 +839,26 @@ export function Scene({ onInteract }: SceneProps) {
                     : [0, 0, 0]
                 }
               >
-                <group onClick={handleFlaskClick}>
+                <group
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    handleFlaskClick();
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    handleFlaskClick();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFlaskClick();
+                  }}
+                >
+                  {isSelectingPourTarget && pourSource !== "Conical Flask" && (
+                    <mesh position={[0, 0.08, 0]}>
+                      <sphereGeometry args={[0.22, 16, 16]} />
+                      <meshBasicMaterial color="#fbbf24" transparent opacity={0.2} />
+                    </mesh>
+                  )}
                   <mesh castShadow receiveShadow position={[0, -0.05, 0]}>
                     <coneGeometry args={[0.15, 0.25, 32]} />
                     <meshPhysicalMaterial 
@@ -787,7 +902,26 @@ export function Scene({ onInteract }: SceneProps) {
                 }
                 rotation={[0, 0, 0]}
               >
-                <group onClick={handleBuretteClick}>
+                <group
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    handleBuretteClick();
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    handleBuretteClick();
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBuretteClick();
+                  }}
+                >
+                  {isSelectingPourTarget && pourSource !== "Burette" && (
+                    <mesh position={[0, 0.05, 0]}>
+                      <cylinderGeometry args={[0.08, 0.08, 0.65, 16]} />
+                      <meshBasicMaterial color="#fbbf24" transparent opacity={0.18} />
+                    </mesh>
+                  )}
                   <mesh castShadow receiveShadow>
                     <cylinderGeometry args={[0.025, 0.025, 0.5, 32]} />
                     <meshPhysicalMaterial 
@@ -844,7 +978,26 @@ export function Scene({ onInteract }: SceneProps) {
                   : [0, 0, 0]
               }
             >
-              <group onClick={handleBeakerClick}>
+              <group
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  handleBeakerClick();
+                }}
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  handleBeakerClick();
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleBeakerClick();
+                }}
+              >
+                {isSelectingPourTarget && pourSource !== "Beaker" && (
+                  <mesh position={[0, 0.08, 0]}>
+                    <cylinderGeometry args={[0.16, 0.16, 0.32, 16]} />
+                    <meshBasicMaterial color="#fbbf24" transparent opacity={0.18} />
+                  </mesh>
+                )}
                 {/* Beaker body - Straight cylinder like real beaker */}
                 <mesh castShadow receiveShadow>
                   <cylinderGeometry args={[0.12, 0.12, 0.25, 32]} />
