@@ -179,7 +179,7 @@ export function Scene({ onInteract }: SceneProps) {
     'Unknown Solution B (Neutral)': [-0.3, 1.1, -1.5],
     'Unknown Solution C (Alkaline)': [0.3, 1.1, -1.5],
 
-    'Hydrogen Peroxide (H₂O₂) 3%': [-0.8, 1.1, -1.5],
+    'Hydrogen Peroxide (H₂O₂) 3%': [-1.3, 1.1, -1.5],
     'Potassium Permanganate (KMnO₄)': [-0.2, 1.1, -1.5],
   }), []);
   
@@ -772,7 +772,7 @@ export function Scene({ onInteract }: SceneProps) {
             {/* CHEMICAL REACTION TEST (H2O2 + KMnO4) */}
                 {/* Hydrogen Peroxide (H2O2) in Beaker */}
                 <PhysicsLabItem
-                  position={[-0.8, 1.1, -1.5]}
+                  position={[-1.3, 1.1, -1.5]}
                   color="#bae6fd"
                   type="beaker"
                   name="Hydrogen Peroxide (H₂O₂) 3%"
