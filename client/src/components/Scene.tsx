@@ -144,6 +144,92 @@ export function Scene({ onInteract }: SceneProps) {
   const activeExperimentRef = useRef<string | null>(null);
   const completedStepIdsRef = useRef<Set<string>>(new Set());
 
+  const [itemFillLevels, setItemFillLevels] = useState<Record<string, number>>(() => ({
+    'HCl (Hydrochloric Acid)': 0.6,
+    'Sodium Hydroxide (NaOH)': 0.7,
+    'Phenolphthalein Indicator': 0.3,
+    'Distilled Water': 0.8,
+    'Unknown Solution A (Acidic)': 0.6,
+    'Unknown Solution B (Neutral)': 0.6,
+    'Unknown Solution C (Alkaline)': 0.6,
+    'Hydrogen Peroxide (H₂O₂) 3%': 0.5,
+    'Potassium Permanganate (KMnO₄)': 0.4,
+  }));
+
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const activePourSoundRef = useRef<{ source: AudioBufferSourceNode; gain: GainNode } | null>(null);
+
+  const stopPourSound = () => {
+    const active = activePourSoundRef.current;
+    if (!active) return;
+    try {
+      active.gain.gain.setTargetAtTime(0, audioCtxRef.current?.currentTime ?? 0, 0.02);
+      active.source.stop();
+    } catch {
+      // ignore
+    }
+    activePourSoundRef.current = null;
+  };
+
+  const startPourSound = async () => {
+    try {
+      const Ctx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined;
+      if (!Ctx) return;
+
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new Ctx();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+
+      stopPourSound();
+
+      // Generate a short "water pour" noise burst in-memory (no asset files).
+      const sampleRate = ctx.sampleRate;
+      const durationSeconds = 2.2;
+      const frameCount = Math.floor(sampleRate * durationSeconds);
+      const buffer = ctx.createBuffer(1, frameCount, sampleRate);
+      const data = buffer.getChannelData(0);
+
+      // White noise -> simple smoothing + amplitude envelope.
+      let last = 0;
+      for (let i = 0; i < frameCount; i++) {
+        const t = i / frameCount;
+        const target = (Math.random() * 2 - 1) * 0.8;
+        last = last * 0.94 + target * 0.06;
+        const attack = Math.min(1, t / 0.08);
+        const release = Math.min(1, (1 - t) / 0.12);
+        const env = Math.min(attack, release);
+        data[i] = last * env;
+      }
+
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = true;
+
+      const bandpass = ctx.createBiquadFilter();
+      bandpass.type = 'bandpass';
+      bandpass.frequency.value = 900;
+      bandpass.Q.value = 0.8;
+
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+
+      source.connect(bandpass);
+      bandpass.connect(gain);
+      gain.connect(ctx.destination);
+
+      source.start();
+      gain.gain.setTargetAtTime(0.18, ctx.currentTime, 0.04);
+
+      activePourSoundRef.current = { source, gain };
+    } catch {
+      // Audio is optional; ignore failures (autoplay policies etc.)
+    }
+  };
+
   useEffect(() => {
     let cancelled = false;
     const checkSupport = async () => {
@@ -275,7 +361,54 @@ export function Scene({ onInteract }: SceneProps) {
       'minor'
     );
 
-    setTimeout(() => {
+    const pourDurationMs = 2000;
+    const startTime = performance.now();
+    const startSourceFill = itemFillLevels[source] ?? 0;
+    const startTargetFill = itemFillLevels[target] ?? 0;
+
+    const maxTransfer = Math.max(0, Math.min(0.25, startSourceFill, 1 - startTargetFill));
+    if (maxTransfer <= 0) {
+      setApparatusStates(prev => ({
+        ...prev,
+        [source]: { ...(prev[source] ?? { grabbed: false, pouring: false, dragging: false }), pouring: false }
+      }));
+      progressTracker.respondToIncident(incidentId);
+      progressTracker.resolveIncident(incidentId);
+      return;
+    }
+
+    void startPourSound();
+
+    const tick = () => {
+      const now = performance.now();
+      const t = Math.min(1, (now - startTime) / pourDurationMs);
+      const amount = maxTransfer * t;
+
+      setItemFillLevels(prev => {
+        const prevSource = prev[source] ?? startSourceFill;
+        const prevTarget = prev[target] ?? startTargetFill;
+
+        const sourceFill = Math.max(0, startSourceFill - amount);
+        const targetFill = Math.min(1, startTargetFill + amount);
+
+        // Avoid pointless state churn
+        if (Math.abs(sourceFill - prevSource) < 0.0005 && Math.abs(targetFill - prevTarget) < 0.0005) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [source]: sourceFill,
+          [target]: targetFill,
+        };
+      });
+
+      if (t < 1) {
+        requestAnimationFrame(tick);
+        return;
+      }
+
+      stopPourSound();
       setApparatusStates(prev => ({
         ...prev,
         [source]: { ...(prev[source] ?? { grabbed: false, pouring: false, dragging: false }), pouring: false }
@@ -283,7 +416,9 @@ export function Scene({ onInteract }: SceneProps) {
 
       progressTracker.respondToIncident(incidentId);
       progressTracker.resolveIncident(incidentId);
-    }, 2000);
+    };
+
+    requestAnimationFrame(tick);
   };
 
   const handleItemClick = (itemName: string, interactionName?: string) => {
@@ -638,7 +773,7 @@ export function Scene({ onInteract }: SceneProps) {
                   type="flask"
                   name="HCl (Hydrochloric Acid)"
                   mass={0.3}
-                  fillLevel={0.6}
+                  fillLevel={itemFillLevels["HCl (Hydrochloric Acid)"] ?? 0.6}
                   liquidColor="#fca5a5"
                   highlight={isSelectingPourTarget && pourSource !== "HCl (Hydrochloric Acid)"}
                   forcePouring={apparatusStates["HCl (Hydrochloric Acid)"]?.pouring || false}
@@ -654,7 +789,7 @@ export function Scene({ onInteract }: SceneProps) {
                   type="graduated_cylinder"
                   name="Sodium Hydroxide (NaOH)"
                   mass={0.2}
-                  fillLevel={0.7}
+                  fillLevel={itemFillLevels["Sodium Hydroxide (NaOH)"] ?? 0.7}
                   liquidColor="#e9d5ff"
                   highlight={isSelectingPourTarget && pourSource !== "Sodium Hydroxide (NaOH)"}
                   forcePouring={apparatusStates["Sodium Hydroxide (NaOH)"]?.pouring || false}
@@ -670,7 +805,7 @@ export function Scene({ onInteract }: SceneProps) {
                   type="beaker"
                   name="Phenolphthalein Indicator"
                   mass={0.1}
-                  fillLevel={0.3}
+                  fillLevel={itemFillLevels["Phenolphthalein Indicator"] ?? 0.3}
                   liquidColor="#fef3c7"
                   highlight={isSelectingPourTarget && pourSource !== "Phenolphthalein Indicator"}
                   forcePouring={apparatusStates["Phenolphthalein Indicator"]?.pouring || false}
@@ -686,7 +821,7 @@ export function Scene({ onInteract }: SceneProps) {
                   type="beaker"
                   name="Distilled Water"
                   mass={0.25}
-                  fillLevel={0.8}
+                  fillLevel={itemFillLevels["Distilled Water"] ?? 0.8}
                   liquidColor="#bae6fd"
                   highlight={isSelectingPourTarget && pourSource !== "Distilled Water"}
                   forcePouring={apparatusStates["Distilled Water"]?.pouring || false}
@@ -703,7 +838,7 @@ export function Scene({ onInteract }: SceneProps) {
                   type="beaker"
                   name="Unknown Solution A (Acidic)"
                   mass={0.2}
-                  fillLevel={0.6}
+                  fillLevel={itemFillLevels["Unknown Solution A (Acidic)"] ?? 0.6}
                   liquidColor="#fca5a5"
                   onSelect={() => {
                     handleItemClick("Unknown Solution A (Acidic)", "Unknown A");
@@ -722,7 +857,7 @@ export function Scene({ onInteract }: SceneProps) {
                   type="beaker"
                   name="Unknown Solution B (Neutral)"
                   mass={0.2}
-                  fillLevel={0.6}
+                  fillLevel={itemFillLevels["Unknown Solution B (Neutral)"] ?? 0.6}
                   liquidColor="#bae6fd"
                   onSelect={() => {
                     handleItemClick("Unknown Solution B (Neutral)", "Unknown B");
@@ -741,7 +876,7 @@ export function Scene({ onInteract }: SceneProps) {
                   type="beaker"
                   name="Unknown Solution C (Alkaline)"
                   mass={0.2}
-                  fillLevel={0.6}
+                  fillLevel={itemFillLevels["Unknown Solution C (Alkaline)"] ?? 0.6}
                   liquidColor="#bbf7d0"
                   onSelect={() => {
                     handleItemClick("Unknown Solution C (Alkaline)", "Unknown C");
@@ -777,7 +912,7 @@ export function Scene({ onInteract }: SceneProps) {
                   type="beaker"
                   name="Hydrogen Peroxide (H₂O₂) 3%"
                   mass={0.25}
-                  fillLevel={0.5}
+                  fillLevel={itemFillLevels["Hydrogen Peroxide (H₂O₂) 3%"] ?? 0.5}
                   liquidColor="#dbeafe"
                   highlight={isSelectingPourTarget && pourSource !== "Hydrogen Peroxide (H₂O₂) 3%"}
                   forcePouring={apparatusStates["Hydrogen Peroxide (H₂O₂) 3%"]?.pouring || false}
@@ -793,7 +928,7 @@ export function Scene({ onInteract }: SceneProps) {
                   type="flask"
                   name="Potassium Permanganate (KMnO₄)"
                   mass={0.15}
-                  fillLevel={0.4}
+                  fillLevel={itemFillLevels["Potassium Permanganate (KMnO₄)"] ?? 0.4}
                   liquidColor="#9333ea"
                   highlight={isSelectingPourTarget && pourSource !== "Potassium Permanganate (KMnO₄)"}
                   forcePouring={apparatusStates["Potassium Permanganate (KMnO₄)"]?.pouring || false}

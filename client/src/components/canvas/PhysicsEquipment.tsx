@@ -52,6 +52,14 @@ export function PhysicsLabItem({
   
   const { addSafetyViolation } = useLabTraining();
 
+  useEffect(() => {
+    setFillLevel(initialFill);
+  }, [initialFill]);
+
+  useEffect(() => {
+    setLiquidColor(initialLiquidColor || initialColor);
+  }, [initialLiquidColor, initialColor]);
+
   // Handle controller grab
   useXREvent('selectstart', (e: any) => {
     if (hovered) {
