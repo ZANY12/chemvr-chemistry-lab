@@ -23,7 +23,7 @@ export function DashboardOverlay({ lastInteraction }: DashboardOverlayProps) {
   const { toast } = useToast();
   const createExperiment = useCreateExperiment();
 
-  const { currentExperiment, experimentSteps, currentStepIndex, getCurrentStep } = useLabTraining();
+  const { currentExperiment, experimentSteps, currentStepIndex, getCurrentStep, canProceed, completeStep } = useLabTraining();
   const currentStep = getCurrentStep();
   
   const form = useForm<z.infer<typeof insertExperimentSchema>>({
@@ -84,6 +84,22 @@ export function DashboardOverlay({ lastInteraction }: DashboardOverlayProps) {
           {currentExperiment && experimentSteps.length > 0 && (
             <div className="mt-2 text-[11px] text-muted-foreground font-mono">
               Step {Math.min(currentStepIndex + 1, experimentSteps.length)} / {experimentSteps.length}
+            </div>
+          )}
+          {currentExperiment && currentStep && !currentStep.completed && (
+            <div className="mt-3">
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  if (canProceed()) {
+                    completeStep(currentStep.id);
+                  }
+                }}
+                disabled={!canProceed()}
+              >
+                Next Step
+              </Button>
             </div>
           )}
         </div>
