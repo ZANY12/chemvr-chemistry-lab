@@ -139,9 +139,30 @@ export function Scene({ onInteract }: SceneProps) {
   const [showReport, setShowReport] = useState(false);
   const [completedSession, setCompletedSession] = useState<ExperimentSession | null>(null);
   const [sessionStarted, setSessionStarted] = useState(false);
+  const [xrSupported, setXrSupported] = useState<boolean>(false);
   const [acidityReadings, setAcidityReadings] = useState<Record<string, number>>({});
   const activeExperimentRef = useRef<string | null>(null);
   const completedStepIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    const checkSupport = async () => {
+      try {
+        if (!('xr' in navigator) || !navigator.xr) {
+          if (!cancelled) setXrSupported(false);
+          return;
+        }
+        const supported = await navigator.xr.isSessionSupported('immersive-vr');
+        if (!cancelled) setXrSupported(!!supported);
+      } catch {
+        if (!cancelled) setXrSupported(false);
+      }
+    };
+    checkSupport();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const itemSpawnPositions = useMemo<Record<string, [number, number, number]>>(() => ({
     'Burette': [1.9, 1.35, -1.5],
@@ -512,7 +533,7 @@ export function Scene({ onInteract }: SceneProps) {
         NOTE: VRButton handles entering WebXR session. 
         It injects itself into the DOM.
       */}
-      <VRButton />
+      {xrSupported && <VRButton />}
       
       {/* Custom VRButton styling */}
       <style>{`
