@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Controllers, Hands, VRButton, XR } from '@react-three/xr';
+import { Controllers, Hands, VRButton, XR, useXR } from '@react-three/xr';
 import { PerspectiveCamera, Text } from '@react-three/drei';
 import { Physics, RigidBody, RapierRigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
@@ -108,6 +108,11 @@ function DraggableApparatus({
       {children}
     </RigidBody>
   );
+}
+
+function XRWorldOffset({ children }: { children: React.ReactNode }) {
+  const { isPresenting } = useXR();
+  return <group position={isPresenting ? [0, 0, -2] : [0, 0, 0]}>{children}</group>;
 }
 
 export function Scene({ onInteract }: SceneProps) {
@@ -706,7 +711,8 @@ export function Scene({ onInteract }: SceneProps) {
         }}
         frameloop="always"
       >
-        <XR>
+        <color attach="background" args={["#0b1220"]} />
+        <XR referenceSpace="local-floor">
           <Controllers />
           <Hands />
           <Suspense fallback={null}>
@@ -737,6 +743,7 @@ export function Scene({ onInteract }: SceneProps) {
             />
             
             <Physics gravity={[0, -9.81, 0]} timeStep={1/60} paused={false} interpolate={true}>
+            <XRWorldOffset>
 
             <LabRoom />
 
@@ -1197,6 +1204,7 @@ export function Scene({ onInteract }: SceneProps) {
             <WasteContainer position={[3, 0, -1.5]} type="general" />
             <WasteContainer position={[3.5, 0, -1.5]} type="organic" />
 
+            </XRWorldOffset>
             </Physics>
           </Suspense>
         </XR>
