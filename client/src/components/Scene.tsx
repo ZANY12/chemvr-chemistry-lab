@@ -134,6 +134,55 @@ function XRDebugMarker() {
   );
 }
 
+function PourStream({
+  start,
+  end,
+  color,
+  visible,
+}: {
+  start: [number, number, number];
+  end: [number, number, number];
+  color: string;
+  visible: boolean;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useFrame(({ clock }) => {
+    if (!meshRef.current) return;
+    if (!visible) {
+      meshRef.current.visible = false;
+      return;
+    }
+
+    meshRef.current.visible = true;
+    const t = clock.getElapsedTime();
+    const pulse = 0.85 + 0.15 * Math.sin(t * 18);
+    meshRef.current.scale.set(pulse, 1, pulse);
+  });
+
+  const startV = useMemo(() => new THREE.Vector3(...start), [start]);
+  const endV = useMemo(() => new THREE.Vector3(...end), [end]);
+  const dir = useMemo(() => new THREE.Vector3().subVectors(endV, startV), [endV, startV]);
+  const len = dir.length();
+  const mid = useMemo(() => new THREE.Vector3().addVectors(startV, endV).multiplyScalar(0.5), [endV, startV]);
+  const quat = useMemo(() => {
+    const q = new THREE.Quaternion();
+    const axis = new THREE.Vector3(0, 1, 0);
+    const nd = dir.clone().normalize();
+    q.setFromUnitVectors(axis, nd);
+    return q;
+  }, [dir]);
+
+  if (!visible) return null;
+
+  return (
+    <mesh ref={meshRef} position={[mid.x, mid.y, mid.z]} quaternion={quat}>
+      <cylinderGeometry args={[0.01, 0.014, Math.max(0.001, len), 10]} />
+      <meshStandardMaterial color={color} transparent opacity={0.55} roughness={0.3} metalness={0} />
+    </mesh>
+  );
+}
+
 export function Scene({ onInteract }: SceneProps) {
   const { completeStep, currentStepIndex, currentExperiment, experimentSteps, recordMeasurement, gogglesOn, labCoatOn, glovesOn, canProceed, getCurrentStep } = useLabTraining();
   
@@ -167,6 +216,12 @@ export function Scene({ onInteract }: SceneProps) {
   const [acidityReadings, setAcidityReadings] = useState<Record<string, number>>({});
   const activeExperimentRef = useRef<string | null>(null);
   const completedStepIdsRef = useRef<Set<string>>(new Set());
+
+  const [activePourVisual, setActivePourVisual] = useState<{
+    source: string;
+    target: string;
+    liquidColor: string;
+  } | null>(null);
 
   const [itemFillLevels, setItemFillLevels] = useState<Record<string, number>>(() => ({
     'HCl (Hydrochloric Acid)': 0.6,
@@ -371,6 +426,14 @@ export function Scene({ onInteract }: SceneProps) {
     setPourSource(null);
   };
 
+  const getItemPosition = (name: string): [number, number, number] => {
+    const dragPos = dragPositions[name];
+    if (dragPos) return dragPos;
+    const spawnPos = itemSpawnPositions[name];
+    if (spawnPos) return spawnPos;
+    return [0, 1.1, -1.5];
+  };
+
   const completePour = (source: string, target: string) => {
     setRecentAction(`Pouring from ${source} into ${target}`);
 
@@ -401,6 +464,11 @@ export function Scene({ onInteract }: SceneProps) {
       return;
     }
 
+    setActivePourVisual({
+      source,
+      target,
+      liquidColor: '#93c5fd',
+    });
     void startPourSound();
 
     const tick = () => {
@@ -433,6 +501,7 @@ export function Scene({ onInteract }: SceneProps) {
       }
 
       stopPourSound();
+      setActivePourVisual(null);
       setApparatusStates(prev => ({
         ...prev,
         [source]: { ...(prev[source] ?? { grabbed: false, pouring: false, dragging: false }), pouring: false }
@@ -765,6 +834,21 @@ export function Scene({ onInteract }: SceneProps) {
             <XRWorldOffset>
 
             <XRDebugMarker />
+
+            {activePourVisual && (
+              <PourStream
+                visible={true}
+                color={activePourVisual.liquidColor}
+                start={(() => {
+                  const p = getItemPosition(activePourVisual.source);
+                  return [p[0], p[1] + 0.22, p[2]] as [number, number, number];
+                })()}
+                end={(() => {
+                  const p = getItemPosition(activePourVisual.target);
+                  return [p[0], p[1] + 0.18, p[2]] as [number, number, number];
+                })()}
+              />
+            )}
 
             <LabRoom />
 
