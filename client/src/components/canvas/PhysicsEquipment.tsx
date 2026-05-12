@@ -148,17 +148,14 @@ export function PhysicsLabItem({
   });
 
   const GlassMaterial = () => (
-    <MeshTransmissionMaterial
-      backside
-      samples={8}
-      thickness={0.15}
-      chromaticAberration={0.03}
-      anisotropy={0.1}
-      distortion={0.05}
+    <meshPhysicalMaterial
+      color="#ffffff"
+      transparent
+      opacity={0.22}
+      roughness={0.05}
+      metalness={0}
       clearcoat={1}
-      transmission={0.95}
-      ior={1.5}
-      roughness={0}
+      clearcoatRoughness={0.05}
     />
   );
 
