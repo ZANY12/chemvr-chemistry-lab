@@ -115,6 +115,25 @@ function XRWorldOffset({ children }: { children: React.ReactNode }) {
   return <group position={isPresenting ? [0, 0, -2] : [0, 0, 0]}>{children}</group>;
 }
 
+function DesktopOnlyCamera() {
+  const { isPresenting } = useXR();
+  if (isPresenting) return null;
+  return <PerspectiveCamera makeDefault position={[0, 1.6, 3]} fov={75} />;
+}
+
+function XRDebugMarker() {
+  const { isPresenting } = useXR();
+  if (!isPresenting) return null;
+  return (
+    <group>
+      <mesh position={[0, 1.5, -1]}>
+        <boxGeometry args={[0.15, 0.15, 0.15]} />
+        <meshBasicMaterial color="#22d3ee" />
+      </mesh>
+    </group>
+  );
+}
+
 export function Scene({ onInteract }: SceneProps) {
   const { completeStep, currentStepIndex, currentExperiment, experimentSteps, recordMeasurement, gogglesOn, labCoatOn, glovesOn, canProceed, getCurrentStep } = useLabTraining();
   
@@ -716,7 +735,7 @@ export function Scene({ onInteract }: SceneProps) {
           <Controllers />
           <Hands />
           <Suspense fallback={null}>
-            <PerspectiveCamera makeDefault position={[0, 1.6, 3]} fov={75} />
+            <DesktopOnlyCamera />
             
             {/* Essential Lighting - Optimized */}
             <ambientLight intensity={0.8} />
@@ -744,6 +763,8 @@ export function Scene({ onInteract }: SceneProps) {
             
             <Physics gravity={[0, -9.81, 0]} timeStep={1/60} paused={false} interpolate={true}>
             <XRWorldOffset>
+
+            <XRDebugMarker />
 
             <LabRoom />
 
