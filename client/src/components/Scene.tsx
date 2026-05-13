@@ -997,14 +997,13 @@ export function Scene({ onInteract }: SceneProps) {
           customActions={selectedApparatus === 'pH Paper'
             ? [
                 {
-                  label: phStripTaken ? '🧻 Strip Taken' : '🧻 Take Strip',
+                  label: phStripTaken ? '🧻 Take New Strip' : '🧻 Take Strip',
                   onClick: () => {
-                    if (phStripTaken) return;
                     setPhStripTaken(true);
                     setPhStripColor('#fef3c7');
-                    setRecentAction('Took a pH paper strip');
+                    setRecentAction(phStripTaken ? 'Replaced pH paper strip' : 'Took a pH paper strip');
                   },
-                  className: phStripTaken ? 'bg-slate-700 hover:bg-slate-700 opacity-70' : 'bg-indigo-600 hover:bg-indigo-700',
+                  className: 'bg-indigo-600 hover:bg-indigo-700',
                 },
                 {
                   label: isSelectingPhDipTarget ? '🎯 Click a Solution...' : '🧪 Dip',
@@ -1022,6 +1021,10 @@ export function Scene({ onInteract }: SceneProps) {
                 {
                   label: '🗑️ Throw Away',
                   onClick: () => {
+                    if (!phStripTaken) {
+                      setRecentAction('Take a strip first');
+                      return;
+                    }
                     disposePhStrip();
                     setSelectedApparatus(null);
                   },
@@ -1197,13 +1200,13 @@ export function Scene({ onInteract }: SceneProps) {
             {/* TITRATION EXPERIMENT */}
                 {/* HCl Solution in Flask */}
                 <PhysicsLabItem
-                  position={[-0.8, 1.1, -1.5]}
+                  position={[-1.4, 1.1, -1.25]}
                   color="#ef4444"
-                  type="flask"
+                  type="beaker"
                   name="HCl (Hydrochloric Acid)"
-                  mass={0.3}
+                  mass={0.25}
                   fillLevel={itemFillLevels["HCl (Hydrochloric Acid)"] ?? 0.6}
-                  liquidColor="#fca5a5"
+                  liquidColor="#f87171"
                   highlight={isSelectingPourTarget && pourSource !== "HCl (Hydrochloric Acid)"}
                   forcePouring={apparatusStates["HCl (Hydrochloric Acid)"]?.pouring || false}
                   isDragging={apparatusStates["HCl (Hydrochloric Acid)"]?.dragging || false}
@@ -1213,13 +1216,13 @@ export function Scene({ onInteract }: SceneProps) {
                 
                 {/* NaOH Solution in Graduated Cylinder */}
                 <PhysicsLabItem
-                  position={[-0.3, 1.1, -1.5]}
-                  color="#a855f7"
-                  type="graduated_cylinder"
+                  position={[-0.8, 1.1, -1.25]}
+                  color="#3b82f6"
+                  type="beaker"
                   name="Sodium Hydroxide (NaOH)"
-                  mass={0.2}
+                  mass={0.25}
                   fillLevel={itemFillLevels["Sodium Hydroxide (NaOH)"] ?? 0.7}
-                  liquidColor="#e9d5ff"
+                  liquidColor="#60a5fa"
                   highlight={isSelectingPourTarget && pourSource !== "Sodium Hydroxide (NaOH)"}
                   forcePouring={apparatusStates["Sodium Hydroxide (NaOH)"]?.pouring || false}
                   isDragging={apparatusStates["Sodium Hydroxide (NaOH)"]?.dragging || false}
@@ -1229,24 +1232,24 @@ export function Scene({ onInteract }: SceneProps) {
                 
                 {/* Phenolphthalein Indicator */}
                 <PhysicsLabItem
-                  position={[0.2, 1.1, -1.5]}
-                  color="#fbbf24"
-                  type="beaker"
+                  position={[-0.2, 1.1, -1.25]}
+                  color="#ec4899"
+                  type="test_tube"
                   name="Phenolphthalein Indicator"
                   mass={0.1}
                   fillLevel={itemFillLevels["Phenolphthalein Indicator"] ?? 0.3}
-                  liquidColor="#fef3c7"
+                  liquidColor="#f472b6"
                   highlight={isSelectingPourTarget && pourSource !== "Phenolphthalein Indicator"}
                   forcePouring={apparatusStates["Phenolphthalein Indicator"]?.pouring || false}
                   isDragging={apparatusStates["Phenolphthalein Indicator"]?.dragging || false}
                   dragPosition={dragPositions["Phenolphthalein Indicator"] || null}
-                  onSelect={() => handleItemClick("Phenolphthalein Indicator", "Indicator")}
+                  onSelect={() => handleItemClick("Phenolphthalein Indicator")}
                 />
                 
                 {/* Distilled Water */}
                 <PhysicsLabItem
-                  position={[0.7, 1.1, -1.5]}
-                  color="#3b82f6"
+                  position={[0.4, 1.1, -1.25]}
+                  color="#06b6d4"
                   type="beaker"
                   name="Distilled Water"
                   mass={0.25}
@@ -1262,13 +1265,13 @@ export function Scene({ onInteract }: SceneProps) {
             {/* ACIDITY TESTING EXPERIMENT */}
                 {/* Acidic Solution (Unknown A) */}
                 <PhysicsLabItem
-                  position={[-0.9, 1.1, -1.5]}
+                  position={[-1.2, 1.1, -1.75]}
                   color="#ef4444"
                   type="beaker"
                   name="Unknown Solution A (Acidic)"
                   mass={0.2}
                   fillLevel={itemFillLevels["Unknown Solution A (Acidic)"] ?? 0.6}
-                  liquidColor="#fca5a5"
+                  liquidColor="#fb7185"
                   onSelect={() => {
                     handleItemClick("Unknown Solution A (Acidic)", "Unknown A");
                     maybeRecordAcidityMeasurement('Unknown A');
@@ -1281,7 +1284,7 @@ export function Scene({ onInteract }: SceneProps) {
                 
                 {/* Neutral Solution (Unknown B) */}
                 <PhysicsLabItem
-                  position={[-0.3, 1.1, -1.5]}
+                  position={[-0.6, 1.1, -1.75]}
                   color="#3b82f6"
                   type="beaker"
                   name="Unknown Solution B (Neutral)"
@@ -1300,13 +1303,13 @@ export function Scene({ onInteract }: SceneProps) {
                 
                 {/* Alkaline Solution (Unknown C) */}
                 <PhysicsLabItem
-                  position={[0.3, 1.1, -1.5]}
+                  position={[0.0, 1.1, -1.75]}
                   color="#22c55e"
                   type="beaker"
                   name="Unknown Solution C (Alkaline)"
                   mass={0.2}
                   fillLevel={itemFillLevels["Unknown Solution C (Alkaline)"] ?? 0.6}
-                  liquidColor="#bbf7d0"
+                  liquidColor="#4ade80"
                   onSelect={() => {
                     handleItemClick("Unknown Solution C (Alkaline)", "Unknown C");
                     maybeRecordAcidityMeasurement('Unknown C');
@@ -1322,13 +1325,20 @@ export function Scene({ onInteract }: SceneProps) {
                   apparatusRef={phPaperRef}
                   dragPosition={dragPositions["pH Paper"] || null}
                   isDragging={apparatusStates["pH Paper"]?.dragging || false}
-                  defaultPosition={itemSpawnPositions["pH Paper"]}
+                  defaultPosition={[0.8, 1.05, -1.75]}
                   rotation={[0, 0, 0]}
                 >
                   <group
                     onPointerDown={(e) => {
                       e.stopPropagation();
                       handleItemClick('pH Paper', 'pH Paper');
+                    }}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      handleItemClick('pH Paper', 'pH Paper');
+                      if (apparatusStates["pH Paper"]?.dragging) {
+                        stopDragging('pH Paper');
+                      }
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1345,9 +1355,9 @@ export function Scene({ onInteract }: SceneProps) {
 
                     {/* Strip sitting on top when taken */}
                     {phStripTaken && !phStripDisposing && (
-                      <mesh position={[0.05, 0.03, 0]} rotation={[0, 0, -Math.PI / 8]}>
+                      <mesh position={[0.05, 0.045, 0]} rotation={[0, 0, -Math.PI / 8]}>
                         <boxGeometry args={[0.06, 0.002, 0.012]} />
-                        <meshStandardMaterial color={phStripColor} />
+                        <meshStandardMaterial color={phStripColor} emissive={phStripColor} emissiveIntensity={0.25} />
                       </mesh>
                     )}
                   </group>
@@ -1358,13 +1368,13 @@ export function Scene({ onInteract }: SceneProps) {
                   <group position={phStripWorldPos}>
                     <mesh rotation={[0, 0, Math.PI / 5]}>
                       <boxGeometry args={[0.06, 0.002, 0.012]} />
-                      <meshStandardMaterial color={phStripColor} />
+                      <meshStandardMaterial color={phStripColor} emissive={phStripColor} emissiveIntensity={0.25} />
                     </mesh>
                   </group>
                 )}
                 
                 {/* Digital pH Meter */}
-                <DigitalThermometer position={[1.5, 0.95, -1.5]} />
+                <DigitalThermometer position={[1.4, 0.95, -1.75]} />
             
             {/* CHEMICAL REACTION TEST (H2O2 + KMnO4) */}
                 {/* Hydrogen Peroxide (H2O2) in Beaker */}
