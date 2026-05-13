@@ -8,6 +8,7 @@ interface ApparatusMenuProps {
   onPour: () => void;
   onDrag: () => void;
   onRelease: () => void;
+  onOpenStopcock?: () => void;
   onClose: () => void;
   isGrabbed: boolean;
   isDragging: boolean;
@@ -19,6 +20,7 @@ export function ApparatusMenu({
   onPour, 
   onDrag,
   onRelease, 
+  onOpenStopcock,
   onClose,
   isGrabbed,
   isDragging
@@ -51,6 +53,15 @@ export function ApparatusMenu({
               >
                 {isDragging ? '🔒 Stop Dragging' : '🖐️ Start Drag'}
               </Button>
+
+              {onOpenStopcock && (
+                <Button
+                  onClick={onOpenStopcock}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  🚰 Open Stopcock
+                </Button>
+              )}
               
               <Button
                 onClick={onPour}

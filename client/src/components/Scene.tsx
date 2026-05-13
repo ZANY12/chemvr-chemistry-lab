@@ -599,6 +599,34 @@ export function Scene({ onInteract }: SceneProps) {
     setIsSelectingPourTarget(true);
     setRecentAction(`Select a target to pour into`);
   };
+
+  const handleOpenStopcock = () => {
+    if (selectedApparatus !== 'Burette') return;
+
+    const burettePos = dragPositions['Burette'] || itemSpawnPositions['Burette'] || [1.9, 1.35, -1.5];
+    const flaskPos = dragPositions['Conical Flask'] || itemSpawnPositions['Conical Flask'] || [1.3, 1.15, -1.5];
+
+    const distanceX = Math.abs(burettePos[0] - flaskPos[0]);
+    const distanceZ = Math.abs(burettePos[2] - flaskPos[2]);
+    const distanceY = burettePos[1] - flaskPos[1];
+
+    // Only dispense if the burette is positioned above the flask.
+    const aligned = distanceX < 0.45 && distanceZ < 0.45 && distanceY > 0.15 && distanceY < 1.4;
+    if (!aligned) {
+      setRecentAction('Position the burette above the conical flask first');
+      return;
+    }
+
+    setRecentAction('Stopcock opened: dispensing into conical flask');
+
+    const step = experimentSteps[currentStepIndex];
+    if (step && !step.completed && step.id === 'titration-5') {
+      completeStep('titration-5');
+    }
+
+    // Use existing pour animation as a desktop-friendly representation of dispensing.
+    completePour('Burette', 'Conical Flask');
+  };
   
   const handleEndExperiment = () => {
     const session = progressTracker.endSession();
@@ -729,6 +757,7 @@ export function Scene({ onInteract }: SceneProps) {
           onPour={() => handlePour(selectedApparatus)}
           onDrag={() => handleDrag(selectedApparatus)}
           onRelease={() => handleRelease(selectedApparatus)}
+          onOpenStopcock={selectedApparatus === 'Burette' ? handleOpenStopcock : undefined}
           onClose={() => {
             setSelectedApparatus(null);
             cancelPourTargeting();
