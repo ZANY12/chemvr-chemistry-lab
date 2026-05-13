@@ -1283,12 +1283,12 @@ export function Scene({ onInteract }: SceneProps) {
                   <mesh castShadow receiveShadow position={[0, -0.05, 0]}>
                     <coneGeometry args={[0.15, 0.25, 32]} />
                     <meshPhysicalMaterial 
-                      color="#fecaca"
+                      color="#ffffff"
                       transparent 
-                      opacity={0.6}
+                      opacity={0.25}
                       roughness={0.2}
                       metalness={0.1}
-                      transmission={0.3}
+                      transmission={0.75}
                       thickness={0.5}
                       ior={1.52}
                       clearcoat={1}
@@ -1297,32 +1297,39 @@ export function Scene({ onInteract }: SceneProps) {
                   </mesh>
 
                   {/* Liquid inside conical flask */}
-                  <mesh position={[0, -0.08, 0]}>
-                    <sphereGeometry args={[0.12, 24, 24]} />
+                  <mesh position={[0, -0.12 + ((itemFillLevels['Conical Flask'] ?? 0.25) * 0.08), 0]}>
+                    <cylinderGeometry
+                      args={[
+                        0.12,
+                        Math.max(0.03, 0.12 - (itemFillLevels['Conical Flask'] ?? 0.25) * 0.1),
+                        Math.max(0.001, (itemFillLevels['Conical Flask'] ?? 0.25) * 0.16),
+                        24,
+                      ]}
+                    />
                     <meshStandardMaterial
                       color={(() => {
                         const initial = buretteInitialFillRef.current;
                         const current = itemFillLevels['Burette'] ?? initial;
                         const dispensed = Math.max(0, initial - current);
-                        // Start almost colorless, then move towards pink as more is dispensed.
                         if (dispensed > 0.18) return '#f472b6';
                         if (dispensed > 0.1) return '#f9a8d4';
                         if (dispensed > 0.04) return '#fce7f3';
                         return '#f8fafc';
                       })()}
                       transparent
-                      opacity={0.65}
+                      opacity={0.7}
                       roughness={0.15}
                       metalness={0}
+                      depthWrite={false}
                     />
                   </mesh>
                   <mesh castShadow receiveShadow position={[0, 0.15, 0]}>
                     <cylinderGeometry args={[0.04, 0.04, 0.15, 32]} />
                     <meshPhysicalMaterial 
-                      color="#fecaca"
+                      color="#ffffff"
                       transparent 
-                      opacity={0.6}
-                      transmission={0.3}
+                      opacity={0.25}
+                      transmission={0.75}
                       ior={1.52}
                     />
                   </mesh>
@@ -1345,6 +1352,8 @@ export function Scene({ onInteract }: SceneProps) {
                 rotation={[0, 0, 0]}
               >
                 <group
+                  // Prevent the burette body from stealing pointer events (stopcock is the interactive target).
+                  raycast={() => null}
                   onPointerDown={(e) => {
                     e.stopPropagation();
                     handleBuretteClick();
@@ -1396,6 +1405,8 @@ export function Scene({ onInteract }: SceneProps) {
 
                   {/* Stopcock press-and-hold control */}
                   <mesh
+                    // Override group raycast disabling for this control.
+                    raycast={THREE.Mesh.prototype.raycast}
                     position={[0, -0.26, 0.03]}
                     onPointerDown={(e) => {
                       e.stopPropagation();
@@ -1404,6 +1415,9 @@ export function Scene({ onInteract }: SceneProps) {
                     onPointerUp={(e) => {
                       e.stopPropagation();
                       stopStopcockDispense();
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
                     }}
                     onPointerOut={() => {
                       stopStopcockDispense();
