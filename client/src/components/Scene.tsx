@@ -1304,15 +1304,17 @@ export function Scene({ onInteract }: SceneProps) {
                   {/* Liquid inside conical flask */}
                   <mesh
                     renderOrder={1}
-                    position={[0, -0.17 + ((itemFillLevels['Conical Flask'] ?? 0.25) * 0.09), 0]}
+                    position={[0, -0.18 + (Math.max(0.001, (itemFillLevels['Conical Flask'] ?? 0.25) * 0.2) / 2), 0]}
                   >
-                    <coneGeometry
-                      args={[
-                        // Slightly smaller than the glass cone to prevent intersection artifacts.
-                        Math.max(0.02, 0.135 - (itemFillLevels['Conical Flask'] ?? 0.25) * 0.08),
-                        Math.max(0.001, (itemFillLevels['Conical Flask'] ?? 0.25) * 0.2),
-                        24,
-                      ]}
+                    <cylinderGeometry
+                      args={(() => {
+                        const fill = Math.max(0.001, Math.min(1, itemFillLevels['Conical Flask'] ?? 0.25));
+                        const height = Math.max(0.001, fill * 0.2);
+                        const rBottom = 0.02;
+                        const rTop = Math.max(rBottom + 0.02, 0.05 + fill * 0.07);
+                        // Truncated cone: flat top surface + widening walls like a real conical vessel.
+                        return [rTop, rBottom, height, 24] as [number, number, number, number];
+                      })()}
                     />
                     <meshStandardMaterial
                       color={(() => {
@@ -1408,7 +1410,7 @@ export function Scene({ onInteract }: SceneProps) {
                     <meshStandardMaterial color="#93c5fd" transparent opacity={0.8} roughness={0.1} metalness={0.05} />
                   </mesh>
 
-                  <mesh position={[0, -0.26, 0]}>
+                  <mesh position={[0, -0.26, 0]} raycast={() => null}>
                     <boxGeometry args={[0.06, 0.02, 0.02]} />
                     <meshStandardMaterial color="#333333" />
                   </mesh>
@@ -1436,7 +1438,7 @@ export function Scene({ onInteract }: SceneProps) {
                   {/* Stopcock: exclusive press-and-hold control (does NOT open menu) */}
                   <mesh
                     raycast={THREE.Mesh.prototype.raycast}
-                    position={[0, -0.26, 0.03]}
+                    position={[0, -0.26, 0.05]}
                     onPointerDown={(e) => {
                       e.stopPropagation();
                       startStopcockDispense();
