@@ -1314,7 +1314,8 @@ export function Scene({ onInteract }: SceneProps) {
                         // avoiding a pointy/conical mound appearance.
                         const rTop = 0.055 + fill * 0.06;
                         const rBottom = Math.max(0.045, rTop - 0.02);
-                        return [rTop, rBottom, height, 24] as [number, number, number, number];
+                        // Flip the frustum (180°) so the wider side sits toward the bottom of the flask.
+                        return [rBottom, rTop, height, 24] as [number, number, number, number];
                       })()}
                     />
                     <meshStandardMaterial
