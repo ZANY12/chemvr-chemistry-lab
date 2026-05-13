@@ -1,8 +1,12 @@
 import React, { useState } from "react";
-import { Scene } from "@/components/Scene";
 import { DashboardOverlay } from "@/components/DashboardOverlay";
 import { ExperimentSelector } from "@/components/ExperimentSelector";
 import { NavigationHint } from "@/components/NavigationHint";
+
+const Scene = React.lazy(async () => {
+  const mod = await import("@/components/Scene");
+  return { default: mod.Scene };
+});
 
 export default function Home() {
   const [lastInteraction, setLastInteraction] = useState<string | null>(null);
@@ -41,7 +45,9 @@ export default function Home() {
         </div>
       )}
       {/* 3D Scene Layer */}
-      <Scene onInteract={handleInteraction} />
+      <React.Suspense fallback={null}>
+        <Scene onInteract={handleInteraction} />
+      </React.Suspense>
       
       {/* UI Overlay Layer (HTML) */}
       <DashboardOverlay lastInteraction={lastInteraction} />

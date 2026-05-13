@@ -30,6 +30,19 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          three: [
+            "three",
+            "@react-three/fiber",
+            "@react-three/drei",
+            "@react-three/xr",
+          ],
+          physics: ["@react-three/rapier"],
+        },
+      },
+    },
   },
   server: {
     fs: {
