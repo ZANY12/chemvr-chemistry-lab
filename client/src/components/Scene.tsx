@@ -1310,9 +1310,10 @@ export function Scene({ onInteract }: SceneProps) {
                       args={(() => {
                         const fill = Math.max(0.001, Math.min(1, itemFillLevels['Conical Flask'] ?? 0.25));
                         const height = Math.max(0.001, fill * 0.2);
-                        const rBottom = 0.02;
-                        const rTop = Math.max(rBottom + 0.02, 0.05 + fill * 0.07);
-                        // Truncated cone: flat top surface + widening walls like a real conical vessel.
+                        // Make the liquid look like it "clings" to the flask walls (flat top, gentle taper),
+                        // avoiding a pointy/conical mound appearance.
+                        const rTop = 0.055 + fill * 0.06;
+                        const rBottom = Math.max(0.045, rTop - 0.02);
                         return [rTop, rBottom, height, 24] as [number, number, number, number];
                       })()}
                     />
