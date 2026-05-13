@@ -761,6 +761,7 @@ export function Scene({ onInteract }: SceneProps) {
         NOTE: VRButton handles entering WebXR session. 
         It injects itself into the DOM.
       */}
+      {xrSupported && <VRButton />}
       {!xrSupported && (
         <div className="fixed bottom-16 right-4 z-30 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-[11px] text-slate-200 backdrop-blur">
           VR not detected yet. If you are on Quest, tap "ENTER VR".
@@ -804,7 +805,6 @@ export function Scene({ onInteract }: SceneProps) {
         frameloop="always"
       >
         <color attach="background" args={["#0b1220"]} />
-        <VRButton />
         <XR referenceSpace="local-floor">
           <Controllers />
           <Hands />
