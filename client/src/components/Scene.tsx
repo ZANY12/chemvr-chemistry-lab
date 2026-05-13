@@ -204,6 +204,7 @@ export function Scene({ onInteract }: SceneProps) {
     'HCl',
     'NaOH',
     'Water',
+    'Beaker',
   ]), []);
   
   const experimentType = getExperimentApparatus();
@@ -243,6 +244,7 @@ export function Scene({ onInteract }: SceneProps) {
   const [itemFillLevels, setItemFillLevels] = useState<Record<string, number>>(() => ({
     'Burette': 0.85,
     'Conical Flask': 0.25,
+    'Beaker': 0,
     'HCl (Hydrochloric Acid)': 0.6,
     'Sodium Hydroxide (NaOH)': 0.7,
     'Phenolphthalein Indicator': 0.3,
@@ -592,8 +594,25 @@ export function Scene({ onInteract }: SceneProps) {
     return [0, 1.1, -1.5];
   };
 
+  const beakerLastContentsKeyRef = useRef<string | null>(null);
+
+  const normalizePhKeyForSource = (sourceName: string): string | null => {
+    if (sourceName === 'HCl (Hydrochloric Acid)') return 'HCl';
+    if (sourceName === 'Sodium Hydroxide (NaOH)') return 'NaOH';
+    if (sourceName === 'Distilled Water') return 'Water';
+    if (sourceName === 'Unknown Solution A (Acidic)') return 'Unknown A';
+    if (sourceName === 'Unknown Solution B (Neutral)') return 'Unknown B';
+    if (sourceName === 'Unknown Solution C (Alkaline)') return 'Unknown C';
+    return null;
+  };
+
   const completePour = (source: string, target: string) => {
     setRecentAction(`Pouring from ${source} into ${target}`);
+
+    if (target === 'Beaker') {
+      const key = normalizePhKeyForSource(source);
+      if (key) beakerLastContentsKeyRef.current = key;
+    }
 
     setApparatusStates(prev => ({
       ...prev,
@@ -681,11 +700,21 @@ export function Scene({ onInteract }: SceneProps) {
         'HCl',
         'NaOH',
         'Water',
+        'Beaker',
       ]);
 
       if (interactionName && allowedTargets.has(interactionName)) {
         import('../lib/aiChemistryEngine').then(({ aiChemistry }) => {
-          const analysis = aiChemistry.analyzepH(interactionName);
+          const analysisKey = interactionName === 'Beaker'
+            ? (beakerLastContentsKeyRef.current ?? null)
+            : interactionName;
+
+          if (!analysisKey) {
+            setRecentAction('Beaker is empty - pour a solution into it first');
+            return;
+          }
+
+          const analysis = aiChemistry.analyzepH(analysisKey);
 
           const universal = analysis.color.universal.toLowerCase();
           const colorMap: Record<string, string> = {
@@ -1356,7 +1385,7 @@ export function Scene({ onInteract }: SceneProps) {
                     {/* Strip sitting on top when taken */}
                     {phStripTaken && !phStripDisposing && (
                       <mesh position={[0.05, 0.045, 0]} rotation={[0, 0, -Math.PI / 8]}>
-                        <boxGeometry args={[0.06, 0.002, 0.012]} />
+                        <boxGeometry args={[0.09, 0.003, 0.02]} />
                         <meshStandardMaterial color={phStripColor} emissive={phStripColor} emissiveIntensity={0.25} />
                       </mesh>
                     )}
@@ -1367,7 +1396,7 @@ export function Scene({ onInteract }: SceneProps) {
                 {phStripWorldPos && (
                   <group position={phStripWorldPos}>
                     <mesh rotation={[0, 0, Math.PI / 5]}>
-                      <boxGeometry args={[0.06, 0.002, 0.012]} />
+                      <boxGeometry args={[0.09, 0.003, 0.02]} />
                       <meshStandardMaterial color={phStripColor} emissive={phStripColor} emissiveIntensity={0.25} />
                     </mesh>
                   </group>
@@ -1704,6 +1733,13 @@ export function Scene({ onInteract }: SceneProps) {
                 {isSelectingPourTarget && pourSource !== "Beaker" && (
                   <mesh position={[0, 0.08, 0]}>
                     <cylinderGeometry args={[0.16, 0.16, 0.32, 16]} />
+                    <meshBasicMaterial color="#fbbf24" transparent opacity={0.18} />
+                  </mesh>
+                )}
+
+                {isSelectingPhDipTarget && (
+                  <mesh position={[0, 0.08, 0]}>
+                    <cylinderGeometry args={[0.17, 0.17, 0.34, 16]} />
                     <meshBasicMaterial color="#fbbf24" transparent opacity={0.18} />
                   </mesh>
                 )}
