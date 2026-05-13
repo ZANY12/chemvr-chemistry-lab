@@ -1351,25 +1351,25 @@ export function Scene({ onInteract }: SceneProps) {
                 }
                 rotation={[0, 0, 0]}
               >
-                <group
-                  // Prevent the burette body from stealing pointer events (stopcock is the interactive target).
-                  raycast={() => null}
-                  onPointerDown={(e) => {
-                    e.stopPropagation();
-                    handleBuretteClick();
-                  }}
-                  onDoubleClick={(e) => {
-                    e.stopPropagation();
-                    handleBuretteClick();
-                    if (apparatusStates["Burette"]?.dragging) {
-                      stopDragging("Burette");
-                    }
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleBuretteClick();
-                  }}
-                >
+                <group>
+                  {/* Burette body: click to open menu */}
+                  <group
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      handleBuretteClick();
+                    }}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      handleBuretteClick();
+                      if (apparatusStates["Burette"]?.dragging) {
+                        stopDragging("Burette");
+                      }
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleBuretteClick();
+                    }}
+                  >
                   {isSelectingPourTarget && pourSource !== "Burette" && (
                     <mesh position={[0, 0.05, 0]}>
                       <cylinderGeometry args={[0.08, 0.08, 0.65, 16]} />
@@ -1403,9 +1403,28 @@ export function Scene({ onInteract }: SceneProps) {
                     <meshStandardMaterial color="#333333" />
                   </mesh>
 
-                  {/* Stopcock press-and-hold control */}
+                  <mesh position={[0, -0.29, 0]}>
+                    <coneGeometry args={[0.015, 0.04, 16]} />
+                    <meshPhysicalMaterial 
+                      color="#e9d5ff"
+                      transparent 
+                      opacity={0.6}
+                      transmission={0.3}
+                      ior={1.52}
+                    />
+                  </mesh>
+                  <Text position={[0.04, 0.2, 0]} fontSize={0.03} color="#a855f7" anchorX="left">0</Text>
+                  <Text position={[0.04, 0.1, 0]} fontSize={0.03} color="#a855f7" anchorX="left">10</Text>
+                  <Text position={[0.04, 0, 0]} fontSize={0.03} color="#a855f7" anchorX="left">20</Text>
+                  <Text position={[0.04, -0.1, 0]} fontSize={0.03} color="#a855f7" anchorX="left">30</Text>
+                  <Text position={[0.04, -0.2, 0]} fontSize={0.03} color="#a855f7" anchorX="left">40</Text>
+                  <Text position={[0, 0.32, 0]} fontSize={0.05} color="#a855f7" anchorX="center">
+                    BURETTE
+                  </Text>
+                  </group>
+
+                  {/* Stopcock: exclusive press-and-hold control (does NOT open menu) */}
                   <mesh
-                    // Override group raycast disabling for this control.
                     raycast={THREE.Mesh.prototype.raycast}
                     position={[0, -0.26, 0.03]}
                     onPointerDown={(e) => {
@@ -1429,25 +1448,6 @@ export function Scene({ onInteract }: SceneProps) {
                     <boxGeometry args={[0.05, 0.012, 0.02]} />
                     <meshStandardMaterial color={stopcockHeld ? '#22c55e' : '#ef4444'} />
                   </mesh>
-
-                  <mesh position={[0, -0.29, 0]}>
-                    <coneGeometry args={[0.015, 0.04, 16]} />
-                    <meshPhysicalMaterial 
-                      color="#e9d5ff"
-                      transparent 
-                      opacity={0.6}
-                      transmission={0.3}
-                      ior={1.52}
-                    />
-                  </mesh>
-                  <Text position={[0.04, 0.2, 0]} fontSize={0.03} color="#a855f7" anchorX="left">0</Text>
-                  <Text position={[0.04, 0.1, 0]} fontSize={0.03} color="#a855f7" anchorX="left">10</Text>
-                  <Text position={[0.04, 0, 0]} fontSize={0.03} color="#a855f7" anchorX="left">20</Text>
-                  <Text position={[0.04, -0.1, 0]} fontSize={0.03} color="#a855f7" anchorX="left">30</Text>
-                  <Text position={[0.04, -0.2, 0]} fontSize={0.03} color="#a855f7" anchorX="left">40</Text>
-                  <Text position={[0, 0.32, 0]} fontSize={0.05} color="#a855f7" anchorX="center">
-                    BURETTE
-                  </Text>
                 </group>
               </DraggableApparatus>
             
