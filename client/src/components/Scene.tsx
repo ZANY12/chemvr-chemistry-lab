@@ -794,15 +794,6 @@ export function Scene({ onInteract }: SceneProps) {
         shadows={false}
         dpr={[0.25, 0.75]}
         performance={{ min: 0.1, max: 1, debounce: 200 }}
-        onCreated={({ gl }) => {
-          const context = gl.getContext();
-          const maybeMakeXRCompatible = (context as WebGLRenderingContext & {
-            makeXRCompatible?: () => Promise<void>;
-          }).makeXRCompatible;
-          if (typeof maybeMakeXRCompatible === 'function') {
-            void maybeMakeXRCompatible.call(context);
-          }
-        }}
         gl={{ 
           antialias: false, 
           powerPreference: "high-performance",
