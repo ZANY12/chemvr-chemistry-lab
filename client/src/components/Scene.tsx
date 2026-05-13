@@ -1297,12 +1297,15 @@ export function Scene({ onInteract }: SceneProps) {
                   </mesh>
 
                   {/* Liquid inside conical flask */}
-                  <mesh position={[0, -0.12 + ((itemFillLevels['Conical Flask'] ?? 0.25) * 0.08), 0]}>
-                    <cylinderGeometry
+                  <mesh
+                    renderOrder={1}
+                    position={[0, -0.17 + ((itemFillLevels['Conical Flask'] ?? 0.25) * 0.09), 0]}
+                  >
+                    <coneGeometry
                       args={[
-                        0.12,
-                        Math.max(0.03, 0.12 - (itemFillLevels['Conical Flask'] ?? 0.25) * 0.1),
-                        Math.max(0.001, (itemFillLevels['Conical Flask'] ?? 0.25) * 0.16),
+                        // Slightly smaller than the glass cone to prevent intersection artifacts.
+                        Math.max(0.02, 0.135 - (itemFillLevels['Conical Flask'] ?? 0.25) * 0.08),
+                        Math.max(0.001, (itemFillLevels['Conical Flask'] ?? 0.25) * 0.2),
                         24,
                       ]}
                     />
@@ -1317,10 +1320,11 @@ export function Scene({ onInteract }: SceneProps) {
                         return '#f8fafc';
                       })()}
                       transparent
-                      opacity={0.7}
+                      opacity={0.85}
                       roughness={0.15}
                       metalness={0}
-                      depthWrite={false}
+                      depthWrite
+                      depthTest
                     />
                   </mesh>
                   <mesh castShadow receiveShadow position={[0, 0.15, 0]}>
