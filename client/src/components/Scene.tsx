@@ -214,6 +214,7 @@ export function Scene({ onInteract }: SceneProps) {
   const [sessionStarted, setSessionStarted] = useState(false);
   const [xrSupported, setXrSupported] = useState<boolean>(false);
   const [acidityReadings, setAcidityReadings] = useState<Record<string, number>>({});
+  const preparedAciditySamplesRef = useRef<Set<string>>(new Set());
   const activeExperimentRef = useRef<string | null>(null);
   const completedStepIdsRef = useRef<Set<string>>(new Set());
 
@@ -622,6 +623,19 @@ export function Scene({ onInteract }: SceneProps) {
 
     setSelectedApparatus(itemName);
     onInteract(interactionName ?? itemName);
+
+    if (currentExperiment === 'acidity-testing') {
+      const step = experimentSteps[currentStepIndex];
+      if (step && !step.completed && step.id === 'acidity-2') {
+        if (interactionName === 'Unknown A' || interactionName === 'Unknown B' || interactionName === 'Unknown C') {
+          preparedAciditySamplesRef.current.add(interactionName);
+          const hasAll = preparedAciditySamplesRef.current.has('Unknown A') && preparedAciditySamplesRef.current.has('Unknown B') && preparedAciditySamplesRef.current.has('Unknown C');
+          if (hasAll) {
+            completeStep('acidity-2');
+          }
+        }
+      }
+    }
   };
 
   const handleFlaskClick = () => {
