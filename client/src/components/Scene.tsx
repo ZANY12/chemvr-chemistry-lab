@@ -1280,7 +1280,7 @@ export function Scene({ onInteract }: SceneProps) {
                       <meshBasicMaterial color="#fbbf24" transparent opacity={0.2} />
                     </mesh>
                   )}
-                  <mesh castShadow receiveShadow position={[0, -0.05, 0]}>
+                  <mesh castShadow receiveShadow position={[0, -0.05, 0]} renderOrder={2}>
                     <coneGeometry args={[0.15, 0.25, 32]} />
                     <meshPhysicalMaterial 
                       color="#ffffff"
@@ -1293,6 +1293,7 @@ export function Scene({ onInteract }: SceneProps) {
                       ior={1.52}
                       clearcoat={1}
                       clearcoatRoughness={0.1}
+                      depthWrite={false}
                     />
                   </mesh>
 
@@ -1317,17 +1318,17 @@ export function Scene({ onInteract }: SceneProps) {
                         if (dispensed > 0.18) return '#f472b6';
                         if (dispensed > 0.1) return '#f9a8d4';
                         if (dispensed > 0.04) return '#fce7f3';
-                        return '#f8fafc';
+                        return '#e0f2fe';
                       })()}
                       transparent
                       opacity={0.85}
                       roughness={0.15}
                       metalness={0}
-                      depthWrite
-                      depthTest
+                      depthWrite={false}
+                      depthTest={true}
                     />
                   </mesh>
-                  <mesh castShadow receiveShadow position={[0, 0.15, 0]}>
+                  <mesh castShadow receiveShadow position={[0, 0.15, 0]} renderOrder={2}>
                     <cylinderGeometry args={[0.04, 0.04, 0.15, 32]} />
                     <meshPhysicalMaterial 
                       color="#ffffff"
@@ -1335,6 +1336,7 @@ export function Scene({ onInteract }: SceneProps) {
                       opacity={0.25}
                       transmission={0.75}
                       ior={1.52}
+                      depthWrite={false}
                     />
                   </mesh>
                   <Text position={[0, 0.28, 0]} fontSize={0.05} color="#ef4444" anchorX="center">
