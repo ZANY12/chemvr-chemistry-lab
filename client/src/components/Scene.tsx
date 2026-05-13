@@ -584,6 +584,15 @@ export function Scene({ onInteract }: SceneProps) {
     console.log(`✅ Drag state updated: ${apparatus} dragging = ${!isDragging}`);
     setRecentAction(isDragging ? `Stopped dragging ${apparatus}` : `Started dragging ${apparatus}`);
   };
+
+  const stopDragging = (apparatus: string) => {
+    setDraggingApparatus((prev) => (prev === apparatus ? null : prev));
+    setApparatusStates(prev => ({
+      ...prev,
+      [apparatus]: { ...(prev[apparatus] ?? { grabbed: false, pouring: false, dragging: false }), dragging: false }
+    }));
+    setRecentAction(`Stopped dragging ${apparatus}`);
+  };
   
   const handlePour = (apparatus: string) => {
     setPourSource(apparatus);
@@ -634,22 +643,21 @@ export function Scene({ onInteract }: SceneProps) {
   // Check if burette is positioned over flask
   const checkProximity = (apparatus: string, position: [number, number, number]) => {
     if (apparatus === "Burette") {
-      // Flask position: [0.2, 1.15, -1.5]
-      const flaskX = 0.2;
-      const flaskY = 1.15;
-      
+      const flaskPos = dragPositions["Conical Flask"] || itemSpawnPositions["Conical Flask"] || [1.3, 1.15, -1.5];
+      const step = experimentSteps[currentStepIndex];
+
       // Check if burette is within range (above the flask)
-      const distanceX = Math.abs(position[0] - flaskX);
-      const distanceY = position[1] - flaskY; // Should be above (positive)
-      
+      const distanceX = Math.abs(position[0] - flaskPos[0]);
+      const distanceZ = Math.abs(position[2] - flaskPos[2]);
+      const distanceY = position[1] - flaskPos[1]; // Should be above (positive)
+
       // Burette is aligned if:
-      // - Within 0.3 units horizontally from flask
-      // - Between 0.3 and 1.0 units above flask
-      if (distanceX < 0.3 && distanceY > 0.3 && distanceY < 1.0) {
-        // Burette is properly positioned over flask!
-        if (currentStepIndex === 2) {
-          completeStep('titration-3');
-          console.log('✅ Step 3 Complete: Burette positioned over flask!');
+      // - Close in X/Z
+      // - Above the flask by a reasonable margin
+      if (distanceX < 0.45 && distanceZ < 0.45 && distanceY > 0.15 && distanceY < 1.4) {
+        if (step && !step.completed && step.id === 'titration-4') {
+          completeStep('titration-4');
+          console.log('✅ Step Complete: Flask positioned under burette');
         }
       }
     }
@@ -1120,6 +1128,9 @@ export function Scene({ onInteract }: SceneProps) {
                   onDoubleClick={(e) => {
                     e.stopPropagation();
                     handleFlaskClick();
+                    if (apparatusStates["Conical Flask"]?.dragging) {
+                      stopDragging("Conical Flask");
+                    }
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1183,6 +1194,9 @@ export function Scene({ onInteract }: SceneProps) {
                   onDoubleClick={(e) => {
                     e.stopPropagation();
                     handleBuretteClick();
+                    if (apparatusStates["Burette"]?.dragging) {
+                      stopDragging("Burette");
+                    }
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
