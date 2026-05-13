@@ -112,26 +112,13 @@ export function FirstPersonControls({
         gl.domElement.requestPointerLock();
       }
     };
-    
-    // Show instructions on first load
-    if (!pointerLocked.current && !isPresenting) {
-      const instruction = document.getElementById('pointer-lock-instruction');
-      if (!instruction) {
-        const div = document.createElement('div');
-        div.id = 'pointer-lock-instruction';
-        div.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:cyan;padding:20px;border-radius:10px;font-size:18px;z-index:1000;pointer-events:none;';
-        div.innerHTML = '🖱️ Click anywhere to start moving<br><small style="color:#94a3b8">Use WASD to move, Mouse to look around</small>';
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 5000);
-      }
-    }
 
     const onPointerLockChange = () => {
       pointerLocked.current = document.pointerLockElement === gl.domElement;
     };
 
     const onPointerLockError = () => {
-      console.error('Pointer lock error');
+      // Intentionally suppressed to avoid user-facing banner/noise.
     };
 
     document.addEventListener('keydown', onKeyDown);
