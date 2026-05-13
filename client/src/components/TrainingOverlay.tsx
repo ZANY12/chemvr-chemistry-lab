@@ -34,11 +34,19 @@ export function TrainingOverlay() {
 
   // Auto-complete Step 1 (Safety Check) when all PPE is worn
   useEffect(() => {
-    if (currentExperiment && allPPEWorn && currentStepIndex === 0) {
-      const currentStep = experimentSteps[0];
-      if (currentStep && currentStep.id === 'distillation-1' && !currentStep.completed) {
-        completeStep('distillation-1');
-      }
+    if (!currentExperiment) return;
+    const step = experimentSteps[currentStepIndex];
+    if (!step || step.completed) return;
+    if (!step.safetyCheck) return;
+    if (!step.ppeRequired?.length) return;
+
+    const hasAllRequired =
+      (!step.ppeRequired.includes('goggles') || gogglesOn) &&
+      (!step.ppeRequired.includes('labCoat') || labCoatOn) &&
+      (!step.ppeRequired.includes('gloves') || glovesOn);
+
+    if (hasAllRequired) {
+      completeStep(step.id);
     }
   }, [allPPEWorn, currentExperiment, currentStepIndex, experimentSteps, completeStep]);
 

@@ -23,7 +23,7 @@ export function DashboardOverlay({ lastInteraction }: DashboardOverlayProps) {
   const { toast } = useToast();
   const createExperiment = useCreateExperiment();
 
-  const { currentExperiment, experimentSteps, currentStepIndex, getCurrentStep, canProceed, completeStep } = useLabTraining();
+  const { currentExperiment, experimentSteps, currentStepIndex, getCurrentStep, canProceed, completeStep, inFumeHood, setInFumeHood } = useLabTraining();
   const currentStep = getCurrentStep();
   
   const form = useForm<z.infer<typeof insertExperimentSchema>>({
@@ -99,6 +99,19 @@ export function DashboardOverlay({ lastInteraction }: DashboardOverlayProps) {
                 disabled={!canProceed()}
               >
                 Next Step
+              </Button>
+            </div>
+          )}
+
+          {currentExperiment && currentStep?.fumeHoodRequired && (
+            <div className="mt-3">
+              <Button
+                size="sm"
+                variant={inFumeHood ? 'default' : 'outline'}
+                className="w-full"
+                onClick={() => setInFumeHood(!inFumeHood)}
+              >
+                {inFumeHood ? 'Fume Hood: ON' : 'Fume Hood: OFF'}
               </Button>
             </div>
           )}
