@@ -9,6 +9,13 @@ interface ApparatusMenuProps {
   onDrag: () => void;
   onRelease: () => void;
   onOpenStopcock?: () => void;
+  customActions?: Array<{
+    label: string;
+    onClick: () => void;
+    className?: string;
+  }>;
+  showPour?: boolean;
+  showRelease?: boolean;
   onClose: () => void;
   isGrabbed: boolean;
   isDragging: boolean;
@@ -21,6 +28,9 @@ export function ApparatusMenu({
   onDrag,
   onRelease, 
   onOpenStopcock,
+  customActions,
+  showPour = true,
+  showRelease = true,
   onClose,
   isGrabbed,
   isDragging
@@ -54,6 +64,16 @@ export function ApparatusMenu({
                 {isDragging ? '🔒 Stop Dragging' : '🖐️ Start Drag'}
               </Button>
 
+              {customActions?.map((action, idx) => (
+                <Button
+                  key={idx}
+                  onClick={action.onClick}
+                  className={`w-full ${action.className ?? 'bg-slate-700 hover:bg-slate-600'} text-white`}
+                >
+                  {action.label}
+                </Button>
+              ))}
+
               {onOpenStopcock && (
                 <Button
                   onClick={onOpenStopcock}
@@ -63,19 +83,23 @@ export function ApparatusMenu({
                 </Button>
               )}
               
-              <Button
-                onClick={onPour}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                💧 Pour
-              </Button>
+              {showPour && (
+                <Button
+                  onClick={onPour}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  💧 Pour
+                </Button>
+              )}
               
-              <Button
-                onClick={onRelease}
-                className="w-full bg-red-600 hover:bg-red-700 text-white"
-              >
-                ✋ Release
-              </Button>
+              {showRelease && (
+                <Button
+                  onClick={onRelease}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                >
+                  ✋ Release
+                </Button>
+              )}
             </div>
           </div>
         </Card>

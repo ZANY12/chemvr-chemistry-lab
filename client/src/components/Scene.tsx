@@ -196,6 +196,15 @@ export function Scene({ onInteract }: SceneProps) {
     
     return 'titration'; // Default to titration
   };
+
+  const allowedPhDipTargets = useMemo(() => new Set([
+    'Unknown A',
+    'Unknown B',
+    'Unknown C',
+    'HCl',
+    'NaOH',
+    'Water',
+  ]), []);
   
   const experimentType = getExperimentApparatus();
   
@@ -215,6 +224,7 @@ export function Scene({ onInteract }: SceneProps) {
   const [xrSupported, setXrSupported] = useState<boolean>(false);
   const [acidityReadings, setAcidityReadings] = useState<Record<string, number>>({});
   const preparedAciditySamplesRef = useRef<Set<string>>(new Set());
+  const dippedPhPaperTargetsRef = useRef<Set<string>>(new Set());
   const activeExperimentRef = useRef<string | null>(null);
   const completedStepIdsRef = useRef<Set<string>>(new Set());
 
@@ -350,6 +360,7 @@ export function Scene({ onInteract }: SceneProps) {
     'Conical Flask': [1.3, 1.15, -1.5],
     'Beaker': [-0.5, 1.15, -1.5],
     'Graduated Cylinder': [0.8, 1.15, -1.5],
+    'pH Paper': [0.9, 1.05, -1.5],
 
     'HCl (Hydrochloric Acid)': [-0.8, 1.1, -1.5],
     'Sodium Hydroxide (NaOH)': [-0.3, 1.1, -1.5],
@@ -369,6 +380,55 @@ export function Scene({ onInteract }: SceneProps) {
   const flaskRef = useRef<RapierRigidBody>(null);
   const beakerRef = useRef<RapierRigidBody>(null);
   const cylinderRef = useRef<RapierRigidBody>(null);
+  const phPaperRef = useRef<RapierRigidBody>(null);
+
+  const [phStripTaken, setPhStripTaken] = useState(false);
+  const [phStripColor, setPhStripColor] = useState<string>('#fef3c7');
+  const [isSelectingPhDipTarget, setIsSelectingPhDipTarget] = useState(false);
+  const [phStripDisposing, setPhStripDisposing] = useState(false);
+  const [phStripWorldPos, setPhStripWorldPos] = useState<[number, number, number] | null>(null);
+  const phStripDisposeRafRef = useRef<number | null>(null);
+
+  const cancelPhDipTargeting = () => {
+    setIsSelectingPhDipTarget(false);
+  };
+
+  const disposePhStrip = () => {
+    if (!phStripTaken || phStripDisposing) return;
+    setPhStripDisposing(true);
+    cancelPhDipTargeting();
+
+    const start = getItemPosition('pH Paper');
+    const end: [number, number, number] = [3.2, 1.0, -1.5];
+    const startTime = performance.now();
+    const durationMs = 550;
+
+    setPhStripWorldPos(start);
+
+    const tick = () => {
+      const now = performance.now();
+      const t = Math.min(1, (now - startTime) / durationMs);
+      const x = start[0] + (end[0] - start[0]) * t;
+      const y = start[1] + (end[1] - start[1]) * t;
+      const z = start[2] + (end[2] - start[2]) * t;
+      setPhStripWorldPos([x, y, z]);
+
+      if (t < 1) {
+        phStripDisposeRafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+
+      phStripDisposeRafRef.current = null;
+      setPhStripWorldPos(null);
+      setPhStripTaken(false);
+      setPhStripColor('#fef3c7');
+      setPhStripDisposing(false);
+      setRecentAction('Disposed pH paper strip');
+    };
+
+    if (phStripDisposeRafRef.current) cancelAnimationFrame(phStripDisposeRafRef.current);
+    phStripDisposeRafRef.current = requestAnimationFrame(tick);
+  };
 
   const experimentDisplayName = useMemo(() => {
     if (!currentExperiment) return null;
@@ -613,6 +673,56 @@ export function Scene({ onInteract }: SceneProps) {
   };
 
   const handleItemClick = (itemName: string, interactionName?: string) => {
+    if (isSelectingPhDipTarget) {
+      const allowedTargets = new Set([
+        'Unknown A',
+        'Unknown B',
+        'Unknown C',
+        'HCl',
+        'NaOH',
+        'Water',
+      ]);
+
+      if (interactionName && allowedTargets.has(interactionName)) {
+        import('../lib/aiChemistryEngine').then(({ aiChemistry }) => {
+          const analysis = aiChemistry.analyzepH(interactionName);
+
+          const universal = analysis.color.universal.toLowerCase();
+          const colorMap: Record<string, string> = {
+            red: '#ef4444',
+            'orange/yellow': '#f59e0b',
+            orange: '#f59e0b',
+            yellow: '#fbbf24',
+            green: '#22c55e',
+            'blue/green': '#38bdf8',
+            blue: '#3b82f6',
+            'dark purple': '#7c3aed',
+            purple: '#7c3aed',
+          };
+
+          const picked = colorMap[universal] ?? '#a3a3a3';
+          setPhStripColor(picked);
+          setRecentAction(`pH paper dipped: ${interactionName} → ${analysis.color.universal}`);
+          dippedPhPaperTargetsRef.current.add(interactionName);
+
+          const step = experimentSteps[currentStepIndex];
+          if (step && !step.completed && step.id === 'acidity-3') {
+            const hasAll = dippedPhPaperTargetsRef.current.has('Unknown A') && dippedPhPaperTargetsRef.current.has('Unknown B') && dippedPhPaperTargetsRef.current.has('Unknown C');
+            if (hasAll) {
+              completeStep('acidity-3');
+            }
+          }
+        });
+
+        setIsSelectingPhDipTarget(false);
+        return;
+      }
+
+      // Click elsewhere cancels dip targeting.
+      setIsSelectingPhDipTarget(false);
+      return;
+    }
+
     if (isSelectingPourTarget && pourSource) {
       if (itemName !== pourSource) {
         completePour(pourSource, itemName);
@@ -884,9 +994,48 @@ export function Scene({ onInteract }: SceneProps) {
           }}
           onRelease={() => handleRelease(selectedApparatus)}
           onOpenStopcock={selectedApparatus === 'Burette' ? handleOpenStopcock : undefined}
+          customActions={selectedApparatus === 'pH Paper'
+            ? [
+                {
+                  label: phStripTaken ? '🧻 Strip Taken' : '🧻 Take Strip',
+                  onClick: () => {
+                    if (phStripTaken) return;
+                    setPhStripTaken(true);
+                    setPhStripColor('#fef3c7');
+                    setRecentAction('Took a pH paper strip');
+                  },
+                  className: phStripTaken ? 'bg-slate-700 hover:bg-slate-700 opacity-70' : 'bg-indigo-600 hover:bg-indigo-700',
+                },
+                {
+                  label: isSelectingPhDipTarget ? '🎯 Click a Solution...' : '🧪 Dip',
+                  onClick: () => {
+                    if (!phStripTaken) {
+                      setRecentAction('Take a strip first');
+                      return;
+                    }
+                    setIsSelectingPhDipTarget(true);
+                    setRecentAction('Select a solution to dip into');
+                    setSelectedApparatus(null);
+                  },
+                  className: isSelectingPhDipTarget ? 'bg-yellow-700 hover:bg-yellow-800' : 'bg-emerald-600 hover:bg-emerald-700',
+                },
+                {
+                  label: '🗑️ Throw Away',
+                  onClick: () => {
+                    disposePhStrip();
+                    setSelectedApparatus(null);
+                  },
+                  className: 'bg-red-700 hover:bg-red-800',
+                },
+              ]
+            : undefined
+          }
+          showPour={selectedApparatus !== 'pH Paper'}
+          showRelease={selectedApparatus !== 'pH Paper'}
           onClose={() => {
             setSelectedApparatus(null);
             cancelPourTargeting();
+            cancelPhDipTargeting();
           }}
           isGrabbed={apparatusStates[selectedApparatus]?.grabbed || false}
           isDragging={apparatusStates[selectedApparatus]?.dragging || false}
@@ -1124,7 +1273,7 @@ export function Scene({ onInteract }: SceneProps) {
                     handleItemClick("Unknown Solution A (Acidic)", "Unknown A");
                     maybeRecordAcidityMeasurement('Unknown A');
                   }}
-                  highlight={isSelectingPourTarget && pourSource !== "Unknown Solution A (Acidic)"}
+                  highlight={(isSelectingPourTarget && pourSource !== "Unknown Solution A (Acidic)") || (isSelectingPhDipTarget && allowedPhDipTargets.has('Unknown A'))}
                   forcePouring={apparatusStates["Unknown Solution A (Acidic)"]?.pouring || false}
                   isDragging={apparatusStates["Unknown Solution A (Acidic)"]?.dragging || false}
                   dragPosition={dragPositions["Unknown Solution A (Acidic)"] || null}
@@ -1143,7 +1292,7 @@ export function Scene({ onInteract }: SceneProps) {
                     handleItemClick("Unknown Solution B (Neutral)", "Unknown B");
                     maybeRecordAcidityMeasurement('Unknown B');
                   }}
-                  highlight={isSelectingPourTarget && pourSource !== "Unknown Solution B (Neutral)"}
+                  highlight={(isSelectingPourTarget && pourSource !== "Unknown Solution B (Neutral)") || (isSelectingPhDipTarget && allowedPhDipTargets.has('Unknown B'))}
                   forcePouring={apparatusStates["Unknown Solution B (Neutral)"]?.pouring || false}
                   isDragging={apparatusStates["Unknown Solution B (Neutral)"]?.dragging || false}
                   dragPosition={dragPositions["Unknown Solution B (Neutral)"] || null}
@@ -1162,15 +1311,30 @@ export function Scene({ onInteract }: SceneProps) {
                     handleItemClick("Unknown Solution C (Alkaline)", "Unknown C");
                     maybeRecordAcidityMeasurement('Unknown C');
                   }}
-                  highlight={isSelectingPourTarget && pourSource !== "Unknown Solution C (Alkaline)"}
+                  highlight={(isSelectingPourTarget && pourSource !== "Unknown Solution C (Alkaline)") || (isSelectingPhDipTarget && allowedPhDipTargets.has('Unknown C'))}
                   forcePouring={apparatusStates["Unknown Solution C (Alkaline)"]?.pouring || false}
                   isDragging={apparatusStates["Unknown Solution C (Alkaline)"]?.dragging || false}
                   dragPosition={dragPositions["Unknown Solution C (Alkaline)"] || null}
                 />
                 
-                {/* pH Paper Strips */}
-                <RigidBody position={[0.9, 1.05, -1.5]} type="fixed">
-                  <group onClick={() => onInteract("pH Paper")}>
+                {/* pH Paper Strips (draggable + dip workflow) */}
+                <DraggableApparatus
+                  apparatusRef={phPaperRef}
+                  dragPosition={dragPositions["pH Paper"] || null}
+                  isDragging={apparatusStates["pH Paper"]?.dragging || false}
+                  defaultPosition={itemSpawnPositions["pH Paper"]}
+                  rotation={[0, 0, 0]}
+                >
+                  <group
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      handleItemClick('pH Paper', 'pH Paper');
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleItemClick('pH Paper', 'pH Paper');
+                    }}
+                  >
                     <mesh>
                       <boxGeometry args={[0.08, 0.02, 0.12]} />
                       <meshStandardMaterial color="#fef3c7" />
@@ -1178,8 +1342,26 @@ export function Scene({ onInteract }: SceneProps) {
                     <Text position={[0, 0.03, 0]} fontSize={0.03} color="#f59e0b" anchorX="center">
                       pH PAPER
                     </Text>
+
+                    {/* Strip sitting on top when taken */}
+                    {phStripTaken && !phStripDisposing && (
+                      <mesh position={[0.05, 0.03, 0]} rotation={[0, 0, -Math.PI / 8]}>
+                        <boxGeometry args={[0.06, 0.002, 0.012]} />
+                        <meshStandardMaterial color={phStripColor} />
+                      </mesh>
+                    )}
                   </group>
-                </RigidBody>
+                </DraggableApparatus>
+
+                {/* Disposing strip animation (world-space) */}
+                {phStripWorldPos && (
+                  <group position={phStripWorldPos}>
+                    <mesh rotation={[0, 0, Math.PI / 5]}>
+                      <boxGeometry args={[0.06, 0.002, 0.012]} />
+                      <meshStandardMaterial color={phStripColor} />
+                    </mesh>
+                  </group>
+                )}
                 
                 {/* Digital pH Meter */}
                 <DigitalThermometer position={[1.5, 0.95, -1.5]} />
