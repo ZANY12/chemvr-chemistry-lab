@@ -223,7 +223,15 @@ export function Scene({ onInteract }: SceneProps) {
     liquidColor: string;
   } | null>(null);
 
+  const [stopcockHeld, setStopcockHeld] = useState(false);
+  const stopcockHeldRef = useRef(false);
+  const stopcockRafRef = useRef<number | null>(null);
+  const stopcockLastTsRef = useRef<number>(0);
+  const buretteInitialFillRef = useRef<number>(0.85);
+
   const [itemFillLevels, setItemFillLevels] = useState<Record<string, number>>(() => ({
+    'Burette': 0.85,
+    'Conical Flask': 0.25,
     'HCl (Hydrochloric Acid)': 0.6,
     'Sodium Hydroxide (NaOH)': 0.7,
     'Phenolphthalein Indicator': 0.3,
@@ -234,6 +242,13 @@ export function Scene({ onInteract }: SceneProps) {
     'Hydrogen Peroxide (H₂O₂) 3%': 0.5,
     'Potassium Permanganate (KMnO₄)': 0.4,
   }));
+
+  useEffect(() => {
+    const buretteFill = itemFillLevels['Burette'];
+    if (typeof buretteFill === 'number' && buretteFill > buretteInitialFillRef.current) {
+      buretteInitialFillRef.current = buretteFill;
+    }
+  }, [itemFillLevels]);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const activePourSoundRef = useRef<{ source: AudioBufferSourceNode; gain: GainNode } | null>(null);
@@ -424,6 +439,88 @@ export function Scene({ onInteract }: SceneProps) {
   const cancelPourTargeting = () => {
     setIsSelectingPourTarget(false);
     setPourSource(null);
+  };
+
+  const stopStopcockDispense = () => {
+    setStopcockHeld(false);
+    stopcockHeldRef.current = false;
+    if (stopcockRafRef.current) {
+      cancelAnimationFrame(stopcockRafRef.current);
+      stopcockRafRef.current = null;
+    }
+    stopcockLastTsRef.current = 0;
+    stopPourSound();
+    setActivePourVisual((prev) => {
+      if (!prev) return prev;
+      if (prev.source === 'Burette' && prev.target === 'Conical Flask') return null;
+      return prev;
+    });
+  };
+
+  const startStopcockDispense = () => {
+    if (stopcockRafRef.current) return;
+
+    const burettePos = dragPositions['Burette'] || itemSpawnPositions['Burette'] || [1.9, 1.35, -1.5];
+    const flaskPos = dragPositions['Conical Flask'] || itemSpawnPositions['Conical Flask'] || [1.3, 1.15, -1.5];
+
+    const distanceX = Math.abs(burettePos[0] - flaskPos[0]);
+    const distanceZ = Math.abs(burettePos[2] - flaskPos[2]);
+    const distanceY = burettePos[1] - flaskPos[1];
+    const aligned = distanceX < 0.45 && distanceZ < 0.45 && distanceY > 0.15 && distanceY < 1.4;
+    if (!aligned) {
+      setRecentAction('Position the burette above the conical flask first');
+      return;
+    }
+
+    setStopcockHeld(true);
+    stopcockHeldRef.current = true;
+    setRecentAction('Dispensing: hold mouse to regulate flow');
+
+    const step = experimentSteps[currentStepIndex];
+    if (step && !step.completed && step.id === 'titration-5') {
+      completeStep('titration-5');
+    }
+
+    setActivePourVisual({
+      source: 'Burette',
+      target: 'Conical Flask',
+      liquidColor: '#93c5fd',
+    });
+    void startPourSound();
+
+    const tick = (ts: number) => {
+      if (!stopcockHeldRef.current && stopcockLastTsRef.current !== 0) {
+        stopStopcockDispense();
+        return;
+      }
+
+      if (!stopcockLastTsRef.current) stopcockLastTsRef.current = ts;
+      const dt = Math.min(0.05, (ts - stopcockLastTsRef.current) / 1000);
+      stopcockLastTsRef.current = ts;
+
+      // Transfer a small amount continuously while held.
+      const ratePerSecond = 0.08;
+      const desired = ratePerSecond * dt;
+
+      setItemFillLevels((prev) => {
+        const sourceFill = prev['Burette'] ?? 0;
+        const targetFill = prev['Conical Flask'] ?? 0;
+        const amount = Math.max(0, Math.min(desired, sourceFill, 1 - targetFill));
+        if (amount <= 0) return prev;
+
+        const next = {
+          ...prev,
+          Burette: Math.max(0, sourceFill - amount),
+          'Conical Flask': Math.min(1, targetFill + amount),
+        };
+
+        return next;
+      });
+
+      stopcockRafRef.current = requestAnimationFrame(tick);
+    };
+
+    stopcockRafRef.current = requestAnimationFrame(tick);
   };
 
   const getItemPosition = (name: string): [number, number, number] => {
@@ -627,6 +724,17 @@ export function Scene({ onInteract }: SceneProps) {
     // Use existing pour animation as a desktop-friendly representation of dispensing.
     completePour('Burette', 'Conical Flask');
   };
+
+  useEffect(() => {
+    // Ensure we don't keep dispensing after the user releases/clicks elsewhere.
+    const handleUp = () => stopStopcockDispense();
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('blur', handleUp);
+    return () => {
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('blur', handleUp);
+    };
+  }, []);
   
   const handleEndExperiment = () => {
     const session = progressTracker.endSession();
@@ -1187,6 +1295,27 @@ export function Scene({ onInteract }: SceneProps) {
                       clearcoatRoughness={0.1}
                     />
                   </mesh>
+
+                  {/* Liquid inside conical flask */}
+                  <mesh position={[0, -0.08, 0]}>
+                    <sphereGeometry args={[0.12, 24, 24]} />
+                    <meshStandardMaterial
+                      color={(() => {
+                        const initial = buretteInitialFillRef.current;
+                        const current = itemFillLevels['Burette'] ?? initial;
+                        const dispensed = Math.max(0, initial - current);
+                        // Start almost colorless, then move towards pink as more is dispensed.
+                        if (dispensed > 0.18) return '#f472b6';
+                        if (dispensed > 0.1) return '#f9a8d4';
+                        if (dispensed > 0.04) return '#fce7f3';
+                        return '#f8fafc';
+                      })()}
+                      transparent
+                      opacity={0.65}
+                      roughness={0.15}
+                      metalness={0}
+                    />
+                  </mesh>
                   <mesh castShadow receiveShadow position={[0, 0.15, 0]}>
                     <cylinderGeometry args={[0.04, 0.04, 0.15, 32]} />
                     <meshPhysicalMaterial 
@@ -1253,10 +1382,40 @@ export function Scene({ onInteract }: SceneProps) {
                       clearcoatRoughness={0.1}
                     />
                   </mesh>
+
+                  {/* Liquid inside burette */}
+                  <mesh position={[0, -0.02 + ((itemFillLevels['Burette'] ?? 0) - 0.5) * 0.35, 0]}>
+                    <cylinderGeometry args={[0.022, 0.022, Math.max(0.001, (itemFillLevels['Burette'] ?? 0) * 0.46), 18]} />
+                    <meshStandardMaterial color="#93c5fd" transparent opacity={0.8} roughness={0.1} metalness={0.05} />
+                  </mesh>
+
                   <mesh position={[0, -0.26, 0]}>
                     <boxGeometry args={[0.06, 0.02, 0.02]} />
                     <meshStandardMaterial color="#333333" />
                   </mesh>
+
+                  {/* Stopcock press-and-hold control */}
+                  <mesh
+                    position={[0, -0.26, 0.03]}
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      startStopcockDispense();
+                    }}
+                    onPointerUp={(e) => {
+                      e.stopPropagation();
+                      stopStopcockDispense();
+                    }}
+                    onPointerOut={() => {
+                      stopStopcockDispense();
+                    }}
+                    onPointerCancel={() => {
+                      stopStopcockDispense();
+                    }}
+                  >
+                    <boxGeometry args={[0.05, 0.012, 0.02]} />
+                    <meshStandardMaterial color={stopcockHeld ? '#22c55e' : '#ef4444'} />
+                  </mesh>
+
                   <mesh position={[0, -0.29, 0]}>
                     <coneGeometry args={[0.015, 0.04, 16]} />
                     <meshPhysicalMaterial 
