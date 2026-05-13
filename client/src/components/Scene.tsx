@@ -863,7 +863,11 @@ export function Scene({ onInteract }: SceneProps) {
           apparatusName={selectedApparatus}
           onGrab={() => handleGrab(selectedApparatus)}
           onPour={() => handlePour(selectedApparatus)}
-          onDrag={() => handleDrag(selectedApparatus)}
+          onDrag={() => {
+            handleDrag(selectedApparatus);
+            setSelectedApparatus(null);
+            cancelPourTargeting();
+          }}
           onRelease={() => handleRelease(selectedApparatus)}
           onOpenStopcock={selectedApparatus === 'Burette' ? handleOpenStopcock : undefined}
           onClose={() => {
