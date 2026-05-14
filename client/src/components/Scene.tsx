@@ -226,6 +226,14 @@ export function Scene({ onInteract }: SceneProps) {
   const [acidityReadings, setAcidityReadings] = useState<Record<string, number>>({});
   const preparedAciditySamplesRef = useRef<Set<string>>(new Set());
   const dippedPhPaperTargetsRef = useRef<Set<string>>(new Set());
+  const reactionStateRef = useRef<{
+    h2o2Added: boolean;
+    kmno4Prepared: boolean;
+    kmno4Added: boolean;
+    startedAtMs: number | null;
+    analysisDone: boolean;
+  }>({ h2o2Added: false, kmno4Prepared: false, kmno4Added: false, startedAtMs: null, analysisDone: false });
+  const [reactionProgress, setReactionProgress] = useState(0);
   const activeExperimentRef = useRef<string | null>(null);
   const completedStepIdsRef = useRef<Set<string>>(new Set());
 
@@ -390,6 +398,24 @@ export function Scene({ onInteract }: SceneProps) {
   const [phStripDisposing, setPhStripDisposing] = useState(false);
   const [phStripWorldPos, setPhStripWorldPos] = useState<[number, number, number] | null>(null);
   const phStripDisposeRafRef = useRef<number | null>(null);
+
+  useFrame(() => {
+    if (currentExperiment !== 'chemical-reaction-test') return;
+    const startedAt = reactionStateRef.current.startedAtMs;
+    if (!startedAt) {
+      if (reactionProgress !== 0) setReactionProgress(0);
+      return;
+    }
+    const t = Math.min(1, Math.max(0, (performance.now() - startedAt) / 6000));
+    if (Math.abs(t - reactionProgress) > 0.002) {
+      setReactionProgress(t);
+    }
+
+    const step = experimentSteps[currentStepIndex];
+    if (step && !step.completed && step.id === 'reaction-6' && t >= 0.85) {
+      completeStep('reaction-6');
+    }
+  });
 
   const cancelPhDipTargeting = () => {
     setIsSelectingPhDipTarget(false);
@@ -614,6 +640,41 @@ export function Scene({ onInteract }: SceneProps) {
       if (key) beakerLastContentsKeyRef.current = key;
     }
 
+    if (currentExperiment === 'chemical-reaction-test') {
+      if (target === 'Conical Flask' && source === 'Hydrogen Peroxide (H₂O₂) 3%') {
+        reactionStateRef.current.h2o2Added = true;
+        const step = experimentSteps[currentStepIndex];
+        if (step && !step.completed && step.id === 'reaction-3') {
+          completeStep('reaction-3');
+        }
+      }
+
+      if (target === 'Conical Flask' && source === 'Potassium Permanganate (KMnO₄)') {
+        reactionStateRef.current.kmno4Added = true;
+        reactionStateRef.current.startedAtMs = performance.now();
+        reactionStateRef.current.analysisDone = false;
+
+        const step = experimentSteps[currentStepIndex];
+        if (step && !step.completed && step.id === 'reaction-5') {
+          completeStep('reaction-5');
+        }
+
+        import('../lib/aiChemistryEngine').then(({ aiChemistry }) => {
+          // Use nominal volumes from the worksheet.
+          const analysis = aiChemistry.analyzeRedoxReaction(50, 5);
+          recordMeasurement('temperatureChange', analysis.temperatureChange, '°C');
+          recordMeasurement('gasVolume', analysis.gasEvolved.volume, 'mL');
+          setRecentAction(`AI: ${analysis.reactionType} | ΔT +${analysis.temperatureChange.toFixed(1)}°C | O₂ ${analysis.gasEvolved.volume.toFixed(0)} mL`);
+          reactionStateRef.current.analysisDone = true;
+
+          const s = experimentSteps[currentStepIndex];
+          if (s && !s.completed && s.id === 'reaction-7') {
+            completeStep('reaction-7');
+          }
+        });
+      }
+    }
+
     setApparatusStates(prev => ({
       ...prev,
       [source]: { ...(prev[source] ?? { grabbed: false, pouring: false, dragging: false }), pouring: true }
@@ -762,6 +823,28 @@ export function Scene({ onInteract }: SceneProps) {
 
     setSelectedApparatus(itemName);
     onInteract(interactionName ?? itemName);
+
+    if (currentExperiment === 'chemical-reaction-test') {
+      const step = experimentSteps[currentStepIndex];
+
+      if (interactionName === 'Conical Flask' && step && !step.completed && step.id === 'reaction-2') {
+        completeStep('reaction-2');
+      }
+
+      if (interactionName === 'KMnO4' && step && !step.completed && step.id === 'reaction-4') {
+        reactionStateRef.current.kmno4Prepared = true;
+        completeStep('reaction-4');
+      }
+
+      // After reaction starts and analysis has been computed, complete reaction-6/7 if user is on them.
+      if (reactionStateRef.current.startedAtMs && step && !step.completed && step.id === 'reaction-6') {
+        // Let the useFrame auto-complete near the end; this click counts as observing.
+      }
+
+      if (reactionStateRef.current.analysisDone && step && !step.completed && step.id === 'reaction-7') {
+        completeStep('reaction-7');
+      }
+    }
 
     if (currentExperiment === 'acidity-testing') {
       const step = experimentSteps[currentStepIndex];
@@ -1023,8 +1106,9 @@ export function Scene({ onInteract }: SceneProps) {
           }}
           onRelease={() => handleRelease(selectedApparatus)}
           onOpenStopcock={selectedApparatus === 'Burette' ? handleOpenStopcock : undefined}
-          customActions={selectedApparatus === 'pH Paper'
-            ? [
+          customActions={(() => {
+            if (selectedApparatus === 'pH Paper') {
+              return [
                 {
                   label: phStripTaken ? '🧻 Take New Strip' : '🧻 Take Strip',
                   onClick: () => {
@@ -1059,9 +1143,28 @@ export function Scene({ onInteract }: SceneProps) {
                   },
                   className: 'bg-red-700 hover:bg-red-800',
                 },
-              ]
-            : undefined
-          }
+              ];
+            }
+
+            if (selectedApparatus === 'Conical Flask' && currentExperiment === 'chemical-reaction-test') {
+              return [
+                {
+                  label: '📝 Record Results',
+                  onClick: () => {
+                    const step = experimentSteps[currentStepIndex];
+                    if (step && !step.completed && step.id === 'reaction-8') {
+                      completeStep('reaction-8');
+                      setRecentAction('Recorded reaction observations');
+                    }
+                    setSelectedApparatus(null);
+                  },
+                  className: 'bg-indigo-700 hover:bg-indigo-800',
+                },
+              ];
+            }
+
+            return undefined;
+          })()}
           showPour={selectedApparatus !== 'pH Paper'}
           showRelease={selectedApparatus !== 'pH Paper'}
           onClose={() => {
@@ -1555,6 +1658,15 @@ export function Scene({ onInteract }: SceneProps) {
                     />
                     <meshStandardMaterial
                       color={(() => {
+                        if (currentExperiment === 'chemical-reaction-test') {
+                          // KMnO4 purple fades to near-colorless as reaction progresses.
+                          if (reactionProgress <= 0.01) return '#e0f2fe';
+                          if (reactionProgress < 0.15) return '#7c3aed';
+                          if (reactionProgress < 0.45) return '#a78bfa';
+                          if (reactionProgress < 0.75) return '#ddd6fe';
+                          return '#f8fafc';
+                        }
+
                         const initial = buretteInitialFillRef.current;
                         const current = itemFillLevels['Burette'] ?? initial;
                         const dispensed = Math.max(0, initial - current);
@@ -1571,6 +1683,25 @@ export function Scene({ onInteract }: SceneProps) {
                       depthTest={true}
                     />
                   </mesh>
+
+                  {currentExperiment === 'chemical-reaction-test' && reactionProgress > 0.05 && (
+                    <group>
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <mesh
+                          key={i}
+                          position={[
+                            -0.05 + (i % 5) * 0.025,
+                            -0.12 + ((i * 0.03 + reactionProgress * 0.22) % 0.22),
+                            -0.03 + Math.floor(i / 5) * 0.03,
+                          ]}
+                          renderOrder={3}
+                        >
+                          <sphereGeometry args={[0.008 + (i % 3) * 0.002, 10, 10]} />
+                          <meshStandardMaterial color="#e0f2fe" transparent opacity={0.45} depthWrite={false} />
+                        </mesh>
+                      ))}
+                    </group>
+                  )}
                   <mesh castShadow receiveShadow position={[0, 0.15, 0]} renderOrder={2}>
                     <cylinderGeometry args={[0.04, 0.04, 0.15, 32]} />
                     <meshPhysicalMaterial 
