@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { RigidBody, CuboidCollider, RapierRigidBody } from '@react-three/rapier';
 import { Interactive, useXREvent, useController } from '@react-three/xr';
-import { Text, Cylinder, Sphere, Box, MeshTransmissionMaterial } from '@react-three/drei';
+import { Text, Cylinder, Sphere, Box } from '@react-three/drei';
 import * as THREE from 'three';
 import { useLabTraining } from '../../lib/labTrainingSystem';
 

@@ -19,6 +19,10 @@ export function DraggableItem({ position: initialPos, color: initialColor, type,
   const [showSparkles, setShowSparkles] = useState(false);
   const [liquidColor, setLiquidColor] = useState(initialColor);
   const [isReacting, setIsReacting] = useState(false);
+
+  const isQuestBrowser =
+    typeof navigator !== 'undefined' &&
+    /OculusBrowser|Quest/i.test(navigator.userAgent);
   
   const onSelectStart = () => {
     setSelected(true);
@@ -41,27 +45,36 @@ export function DraggableItem({ position: initialPos, color: initialColor, type,
     setSelected(false);
   };
 
-  const GlassMaterial = () => (
-    <MeshTransmissionMaterial 
-      backside
-      samples={16}
-      thickness={0.15}
-      chromaticAberration={0.05}
-      anisotropy={0.1}
-      distortion={0.1}
-      distortionScale={0.1}
-      temporalDistortion={0.1}
-      clearcoat={1}
-      clearcoatRoughness={0}
-      transmission={0.95}
-      ior={1.5}
-      reflectivity={0.5}
-      attenuationDistance={0.5}
-      attenuationColor="#ffffff"
-      color="#ffffff"
-      roughness={0}
-    />
-  );
+  const GlassMaterial = () =>
+    isQuestBrowser ? (
+      <meshStandardMaterial
+        color="#ffffff"
+        transparent
+        opacity={0.25}
+        roughness={0.15}
+        metalness={0}
+      />
+    ) : (
+      <MeshTransmissionMaterial
+        backside
+        samples={16}
+        thickness={0.15}
+        chromaticAberration={0.05}
+        anisotropy={0.1}
+        distortion={0.1}
+        distortionScale={0.1}
+        temporalDistortion={0.1}
+        clearcoat={1}
+        clearcoatRoughness={0}
+        transmission={0.95}
+        ior={1.5}
+        reflectivity={0.5}
+        attenuationDistance={0.5}
+        attenuationColor="#ffffff"
+        color="#ffffff"
+        roughness={0}
+      />
+    );
 
   return (
     <Interactive 
@@ -226,22 +239,30 @@ export function VortexMixer({ position }: { position: [number, number, number] }
 }
 
 export function Whiteboard({ position, rotation }: { position: [number, number, number], rotation: [number, number, number] }) {
+  const isQuestBrowser =
+    typeof navigator !== 'undefined' &&
+    /OculusBrowser|Quest/i.test(navigator.userAgent);
+
   return (
     <group position={position} rotation={rotation}>
       <Plane args={[2.5, 1.5]} position={[0, 0, 0]}>
-        <MeshTransmissionMaterial 
-          samples={8}
-          thickness={0.05}
-          chromaticAberration={0.02}
-          anisotropy={0.1}
-          distortion={0}
-          clearcoat={1}
-          attenuationDistance={1}
-          attenuationColor="#ffffff"
-          color="#ffffff"
-          transparent
-          opacity={0.3}
-        />
+        {isQuestBrowser ? (
+          <meshStandardMaterial color="#ffffff" transparent opacity={0.3} roughness={0.25} />
+        ) : (
+          <MeshTransmissionMaterial
+            samples={8}
+            thickness={0.05}
+            chromaticAberration={0.02}
+            anisotropy={0.1}
+            distortion={0}
+            clearcoat={1}
+            attenuationDistance={1}
+            attenuationColor="#ffffff"
+            color="#ffffff"
+            transparent
+            opacity={0.3}
+          />
+        )}
       </Plane>
       <Box args={[2.6, 0.05, 0.05]} position={[0, 0.775, 0]}>
         <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
@@ -265,20 +286,28 @@ export function Whiteboard({ position, rotation }: { position: [number, number, 
 }
 
 export function BotanicalSample({ position }: { position: [number, number, number] }) {
+  const isQuestBrowser =
+    typeof navigator !== 'undefined' &&
+    /OculusBrowser|Quest/i.test(navigator.userAgent);
+
   return (
     <group position={position}>
       <Cylinder args={[0.05, 0.05, 0.15, 32]} position={[0, 0.075, 0]}>
-        <MeshTransmissionMaterial 
-          samples={8}
-          thickness={0.05}
-          chromaticAberration={0.02}
-          anisotropy={0.1}
-          distortion={0.1}
-          clearcoat={1}
-          attenuationDistance={1}
-          attenuationColor="#ffffff"
-          color="#e2e8f0"
-        />
+        {isQuestBrowser ? (
+          <meshStandardMaterial color="#e2e8f0" transparent opacity={0.35} roughness={0.25} />
+        ) : (
+          <MeshTransmissionMaterial
+            samples={8}
+            thickness={0.05}
+            chromaticAberration={0.02}
+            anisotropy={0.1}
+            distortion={0.1}
+            clearcoat={1}
+            attenuationDistance={1}
+            attenuationColor="#ffffff"
+            color="#e2e8f0"
+          />
+        )}
       </Cylinder>
       <group position={[0, 0.05, 0]}>
         <mesh>

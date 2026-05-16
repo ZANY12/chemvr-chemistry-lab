@@ -110,6 +110,44 @@ function DraggableApparatus({
   );
 }
 
+function ReactionTimelineUpdater({
+  enabled,
+  startedAtMs,
+  reactionProgress,
+  setReactionProgress,
+  experimentSteps,
+  currentStepIndex,
+  completeStep,
+}: {
+  enabled: boolean;
+  startedAtMs: number | null;
+  reactionProgress: number;
+  setReactionProgress: React.Dispatch<React.SetStateAction<number>>;
+  experimentSteps: Array<{ id: string; completed: boolean }>;
+  currentStepIndex: number;
+  completeStep: (stepId: string) => void;
+}) {
+  useFrame(() => {
+    if (!enabled) return;
+    if (!startedAtMs) {
+      if (reactionProgress !== 0) setReactionProgress(0);
+      return;
+    }
+
+    const t = Math.min(1, Math.max(0, (performance.now() - startedAtMs) / 6000));
+    if (Math.abs(t - reactionProgress) > 0.002) {
+      setReactionProgress(t);
+    }
+
+    const step = experimentSteps[currentStepIndex];
+    if (step && !step.completed && step.id === 'reaction-6' && t >= 0.85) {
+      completeStep('reaction-6');
+    }
+  });
+
+  return null;
+}
+
 function XRWorldOffset({ children }: { children: React.ReactNode }) {
   const { isPresenting } = useXR();
   return <group position={isPresenting ? [0, 0, -2] : [0, 0, 0]}>{children}</group>;
@@ -398,24 +436,6 @@ export function Scene({ onInteract }: SceneProps) {
   const [phStripDisposing, setPhStripDisposing] = useState(false);
   const [phStripWorldPos, setPhStripWorldPos] = useState<[number, number, number] | null>(null);
   const phStripDisposeRafRef = useRef<number | null>(null);
-
-  useFrame(() => {
-    if (currentExperiment !== 'chemical-reaction-test') return;
-    const startedAt = reactionStateRef.current.startedAtMs;
-    if (!startedAt) {
-      if (reactionProgress !== 0) setReactionProgress(0);
-      return;
-    }
-    const t = Math.min(1, Math.max(0, (performance.now() - startedAt) / 6000));
-    if (Math.abs(t - reactionProgress) > 0.002) {
-      setReactionProgress(t);
-    }
-
-    const step = experimentSteps[currentStepIndex];
-    if (step && !step.completed && step.id === 'reaction-6' && t >= 0.85) {
-      completeStep('reaction-6');
-    }
-  });
 
   const cancelPhDipTargeting = () => {
     setIsSelectingPhDipTarget(false);
@@ -1208,7 +1228,7 @@ export function Scene({ onInteract }: SceneProps) {
         NOTE: VRButton handles entering WebXR session. 
         It injects itself into the DOM.
       */}
-      {xrSupported && <VRButton />}
+      <VRButton />
       {!xrSupported && (
         <div className="fixed bottom-16 right-4 z-30 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-[11px] text-slate-200 backdrop-blur">
           VR not detected yet. If you are on Quest, tap "ENTER VR".
@@ -1280,6 +1300,16 @@ export function Scene({ onInteract }: SceneProps) {
                 }
               }}
               onProximityCheck={checkProximity}
+            />
+
+            <ReactionTimelineUpdater
+              enabled={currentExperiment === 'chemical-reaction-test'}
+              startedAtMs={reactionStateRef.current.startedAtMs}
+              reactionProgress={reactionProgress}
+              setReactionProgress={setReactionProgress}
+              experimentSteps={experimentSteps}
+              currentStepIndex={currentStepIndex}
+              completeStep={completeStep}
             />
             
             <Physics gravity={[0, -9.81, 0]} timeStep={1/60} paused={false} interpolate={true}>

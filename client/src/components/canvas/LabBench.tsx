@@ -45,6 +45,10 @@ function Sink() {
   const [waterOn, setWaterOn] = useState(false);
   const waterRef = useRef<THREE.Mesh>(null);
 
+  const isQuestBrowser =
+    typeof navigator !== 'undefined' &&
+    /OculusBrowser|Quest/i.test(navigator.userAgent);
+
   useFrame((state) => {
     if (waterRef.current && waterOn) {
       waterRef.current.scale.x = 1 + Math.sin(state.clock.elapsedTime * 25) * 0.15;
@@ -100,16 +104,20 @@ function Sink() {
         {waterOn && (
           <mesh ref={waterRef} position={[0, 0.05, 0.18]}>
             <cylinderGeometry args={[0.01, 0.012, 0.4]} />
-            <MeshTransmissionMaterial 
-              samples={4}
-              thickness={0.1}
-              chromaticAberration={0.1}
-              distortion={0.5}
-              distortionScale={1}
-              color="#bae6fd"
-              ior={1.33}
-              transmission={1}
-            />
+            {isQuestBrowser ? (
+              <meshStandardMaterial color="#bae6fd" transparent opacity={0.35} roughness={0.2} />
+            ) : (
+              <MeshTransmissionMaterial
+                samples={4}
+                thickness={0.1}
+                chromaticAberration={0.1}
+                distortion={0.5}
+                distortionScale={1}
+                color="#bae6fd"
+                ior={1.33}
+                transmission={1}
+              />
+            )}
           </mesh>
         )}
       </group>
@@ -118,19 +126,27 @@ function Sink() {
 }
 
 export function FumeHood({ position }: { position: [number, number, number] }) {
+  const isQuestBrowser =
+    typeof navigator !== 'undefined' &&
+    /OculusBrowser|Quest/i.test(navigator.userAgent);
+
   return (
     <group position={position}>
       <Box args={[2, 2.6, 1.1]} position={[0, 1.3, 0]} castShadow>
         <meshStandardMaterial color="#f8fafc" roughness={0.3} />
       </Box>
       <Box args={[1.8, 1.3, 0.05]} position={[0, 1.25, 0.55]} castShadow>
-        <MeshTransmissionMaterial 
-          samples={8}
-          thickness={0.05}
-          chromaticAberration={0.02}
-          transmission={0.95}
-          color="#94a3b8"
-        />
+        {isQuestBrowser ? (
+          <meshStandardMaterial color="#94a3b8" transparent opacity={0.35} roughness={0.25} />
+        ) : (
+          <MeshTransmissionMaterial
+            samples={8}
+            thickness={0.05}
+            chromaticAberration={0.02}
+            transmission={0.95}
+            color="#94a3b8"
+          />
+        )}
       </Box>
       <Box args={[1.9, 0.05, 1]} position={[0, 0.6, 0]}>
         <meshStandardMaterial color="#0f172a" roughness={0.1} metalness={0.3} />
@@ -143,6 +159,10 @@ export function FumeHood({ position }: { position: [number, number, number] }) {
 export function Centrifuge({ position }: { position: [number, number, number] }) {
   const rotorRef = useRef<THREE.Group>(null);
   const [running, setRunning] = useState(false);
+
+  const isQuestBrowser =
+    typeof navigator !== 'undefined' &&
+    /OculusBrowser|Quest/i.test(navigator.userAgent);
 
   useFrame((state, delta) => {
     if (running && rotorRef.current) {
@@ -164,7 +184,11 @@ export function Centrifuge({ position }: { position: [number, number, number] })
           ))}
         </group>
         <Box args={[0.45, 0.05, 0.45]} position={[0, 0.25, 0]}>
-          <MeshTransmissionMaterial samples={4} thickness={0.1} transmission={1} color="#cbd5e1" />
+          {isQuestBrowser ? (
+            <meshStandardMaterial color="#cbd5e1" transparent opacity={0.35} roughness={0.25} />
+          ) : (
+            <MeshTransmissionMaterial samples={4} thickness={0.1} transmission={1} color="#cbd5e1" />
+          )}
         </Box>
         <Text position={[0, 0.05, 0.24]} rotation={[-Math.PI / 4, 0, 0]} fontSize={0.025} color="#475569" fontWeight="bold">
           {running ? "SPINNING" : "READY"}

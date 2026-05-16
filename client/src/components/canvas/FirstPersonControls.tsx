@@ -38,6 +38,14 @@ export function FirstPersonControls({
   useEffect(() => {
     if (isPresenting || !enabled) return;
 
+    const canPointerLock =
+      typeof (gl.domElement as any)?.requestPointerLock === 'function' &&
+      typeof document !== 'undefined' &&
+      typeof document.addEventListener === 'function' &&
+      (typeof window === 'undefined' ||
+        typeof window.matchMedia !== 'function' ||
+        window.matchMedia('(pointer: fine)').matches);
+
     const onKeyDown = (event: KeyboardEvent) => {
       switch (event.code) {
         case 'KeyW':
@@ -108,8 +116,9 @@ export function FirstPersonControls({
     };
 
     const onClick = () => {
+      if (!canPointerLock) return;
       if (!pointerLocked.current && !isPresenting) {
-        gl.domElement.requestPointerLock();
+        (gl.domElement as any).requestPointerLock();
       }
     };
 
@@ -136,7 +145,7 @@ export function FirstPersonControls({
       document.removeEventListener('pointerlockchange', onPointerLockChange);
       document.removeEventListener('pointerlockerror', onPointerLockError);
       
-      if (document.pointerLockElement === gl.domElement) {
+      if (canPointerLock && document.pointerLockElement === gl.domElement) {
         document.exitPointerLock();
       }
     };

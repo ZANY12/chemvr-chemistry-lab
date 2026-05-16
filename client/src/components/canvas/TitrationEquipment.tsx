@@ -6,6 +6,10 @@ import { Text, Cylinder, Box, MeshTransmissionMaterial } from '@react-three/drei
 import * as THREE from 'three';
 import { useLabTraining } from '../../lib/labTrainingSystem';
 
+const IS_QUEST_BROWSER =
+  typeof navigator !== 'undefined' &&
+  /OculusBrowser|Quest/i.test(navigator.userAgent);
+
 interface BuretteProps {
   position: [number, number, number];
   titrantName?: string;
@@ -180,15 +184,19 @@ export function Burette({
 
           {/* Glass tube */}
           <Cylinder args={[buretteRadius, buretteRadius, buretteHeight, 16]} position={[0, buretteHeight / 2, 0]} castShadow>
-            <MeshTransmissionMaterial
-              backside
-              samples={4}
-              thickness={0.1}
-              chromaticAberration={0.02}
-              transmission={0.95}
-              ior={1.5}
-              roughness={0}
-            />
+            {IS_QUEST_BROWSER ? (
+              <meshStandardMaterial color="#ffffff" transparent opacity={0.25} roughness={0.15} />
+            ) : (
+              <MeshTransmissionMaterial
+                backside
+                samples={4}
+                thickness={0.1}
+                chromaticAberration={0.02}
+                transmission={0.95}
+                ior={1.5}
+                roughness={0}
+              />
+            )}
           </Cylinder>
 
           {/* Liquid inside */}
@@ -224,13 +232,17 @@ export function Burette({
           {/* Tip */}
           <mesh position={[0, -0.04, 0]} rotation={[Math.PI, 0, 0]}>
             <coneGeometry args={[buretteRadius * 0.5, 0.03, 8]} />
-            <MeshTransmissionMaterial
-              backside
-              samples={4}
-              thickness={0.1}
-              transmission={0.95}
-              ior={1.5}
-            />
+            {IS_QUEST_BROWSER ? (
+              <meshStandardMaterial color="#ffffff" transparent opacity={0.25} roughness={0.15} />
+            ) : (
+              <MeshTransmissionMaterial
+                backside
+                samples={4}
+                thickness={0.1}
+                transmission={0.95}
+                ior={1.5}
+              />
+            )}
           </mesh>
 
           {/* Liquid stream when dispensing */}
@@ -416,26 +428,34 @@ export function ConicalFlask({
           {/* Conical flask body */}
           <mesh position={[0, flaskHeight / 3, 0]} castShadow>
             <coneGeometry args={[flaskRadius, flaskHeight * 0.7, 32]} />
-            <MeshTransmissionMaterial
-              backside
-              samples={4}
-              thickness={0.15}
-              chromaticAberration={0.03}
-              transmission={0.95}
-              ior={1.5}
-              roughness={0}
-            />
+            {IS_QUEST_BROWSER ? (
+              <meshStandardMaterial color="#ffffff" transparent opacity={0.25} roughness={0.15} />
+            ) : (
+              <MeshTransmissionMaterial
+                backside
+                samples={4}
+                thickness={0.15}
+                chromaticAberration={0.03}
+                transmission={0.95}
+                ior={1.5}
+                roughness={0}
+              />
+            )}
           </mesh>
 
           {/* Neck */}
           <Cylinder args={[0.025, 0.04, 0.1, 16]} position={[0, flaskHeight - 0.05, 0]} castShadow>
-            <MeshTransmissionMaterial
-              backside
-              samples={4}
-              thickness={0.1}
-              transmission={0.95}
-              ior={1.5}
-            />
+            {IS_QUEST_BROWSER ? (
+              <meshStandardMaterial color="#ffffff" transparent opacity={0.25} roughness={0.15} />
+            ) : (
+              <MeshTransmissionMaterial
+                backside
+                samples={4}
+                thickness={0.1}
+                transmission={0.95}
+                ior={1.5}
+              />
+            )}
           </Cylinder>
 
           {/* Liquid */}
