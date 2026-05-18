@@ -156,13 +156,9 @@ function XRWorldOffset({ children, offsetZ }: { children: React.ReactNode; offse
 function VRWorldNudgeControls({
   offsetZ,
   onSetOffsetZ,
-  open,
-  onToggle,
 }: {
   offsetZ: number;
   onSetOffsetZ: (next: number) => void;
-  open: boolean;
-  onToggle: () => void;
 }) {
   const { isPresenting } = useXR();
   const { camera } = useThree();
@@ -201,62 +197,46 @@ function VRWorldNudgeControls({
 
   return (
     <group ref={rootRef}>
-      <Interactive onSelectStart={onToggle}>
-        <group position={[0.15, 0, 0.012]}>
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[0.24, 0.11, 0.01]} />
+        <meshStandardMaterial color="#0b1220" transparent opacity={0.65} />
+      </mesh>
+
+      <Interactive onSelectStart={() => nudge(0.25)}>
+        <group position={[-0.07, 0, 0.012]}>
           <mesh>
             <boxGeometry args={[0.08, 0.08, 0.01]} />
-            <meshStandardMaterial color={open ? '#0ea5e9' : '#1f2937'} />
+            <meshStandardMaterial color="#1f2937" />
           </mesh>
-          <Text position={[0, -0.004, 0.012]} fontSize={0.038} color="#e2e8f0" anchorX="center" anchorY="middle">
-            Z
+          <Text position={[0, -0.005, 0.012]} fontSize={0.05} color="#e2e8f0" anchorX="center" anchorY="middle">
+            +
           </Text>
         </group>
       </Interactive>
 
-      {open && (
-        <group>
-          <mesh position={[0, 0, 0]}>
-            <boxGeometry args={[0.24, 0.11, 0.01]} />
-            <meshStandardMaterial color="#0b1220" transparent opacity={0.65} />
+      <Interactive onSelectStart={() => nudge(-0.25)}>
+        <group position={[0.02, 0, 0.012]}>
+          <mesh>
+            <boxGeometry args={[0.08, 0.08, 0.01]} />
+            <meshStandardMaterial color="#1f2937" />
           </mesh>
-
-          <Interactive onSelectStart={() => nudge(0.25)}>
-            <group position={[-0.07, 0, 0.012]}>
-              <mesh>
-                <boxGeometry args={[0.08, 0.08, 0.01]} />
-                <meshStandardMaterial color="#1f2937" />
-              </mesh>
-              <Text position={[0, -0.005, 0.012]} fontSize={0.05} color="#e2e8f0" anchorX="center" anchorY="middle">
-                +
-              </Text>
-            </group>
-          </Interactive>
-
-          <Interactive onSelectStart={() => nudge(-0.25)}>
-            <group position={[0.02, 0, 0.012]}>
-              <mesh>
-                <boxGeometry args={[0.08, 0.08, 0.01]} />
-                <meshStandardMaterial color="#1f2937" />
-              </mesh>
-              <Text position={[0, -0.005, 0.012]} fontSize={0.05} color="#e2e8f0" anchorX="center" anchorY="middle">
-                -
-              </Text>
-            </group>
-          </Interactive>
-
-          <Interactive onSelectStart={() => onSetOffsetZ(-2)}>
-            <group position={[0.11, 0, 0.012]}>
-              <mesh>
-                <boxGeometry args={[0.09, 0.08, 0.01]} />
-                <meshStandardMaterial color="#0f172a" />
-              </mesh>
-              <Text position={[0, -0.005, 0.012]} fontSize={0.03} color="#94a3b8" anchorX="center" anchorY="middle">
-                reset
-              </Text>
-            </group>
-          </Interactive>
+          <Text position={[0, -0.005, 0.012]} fontSize={0.05} color="#e2e8f0" anchorX="center" anchorY="middle">
+            -
+          </Text>
         </group>
-      )}
+      </Interactive>
+
+      <Interactive onSelectStart={() => onSetOffsetZ(-2)}>
+        <group position={[0.11, 0, 0.012]}>
+          <mesh>
+            <boxGeometry args={[0.09, 0.08, 0.01]} />
+            <meshStandardMaterial color="#0f172a" />
+          </mesh>
+          <Text position={[0, -0.005, 0.012]} fontSize={0.03} color="#94a3b8" anchorX="center" anchorY="middle">
+            reset
+          </Text>
+        </group>
+      </Interactive>
     </group>
   );
 }
@@ -371,7 +351,6 @@ export function Scene({ onInteract }: SceneProps) {
   const [xrSupported, setXrSupported] = useState<boolean>(false);
   const [acidityReadings, setAcidityReadings] = useState<Record<string, number>>({});
   const [worldOffsetZ, setWorldOffsetZ] = useState(-2);
-  const [worldNudgeOpen, setWorldNudgeOpen] = useState(false);
   const preparedAciditySamplesRef = useRef<Set<string>>(new Set());
   const dippedPhPaperTargetsRef = useRef<Set<string>>(new Set());
   const reactionStateRef = useRef<{
@@ -1425,8 +1404,6 @@ export function Scene({ onInteract }: SceneProps) {
             <VRWorldNudgeControls
               offsetZ={worldOffsetZ}
               onSetOffsetZ={setWorldOffsetZ}
-              open={worldNudgeOpen}
-              onToggle={() => setWorldNudgeOpen(v => !v)}
             />
             
             <Physics gravity={[0, -9.81, 0]} timeStep={1/60} paused={false} interpolate={true}>
