@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Controllers, Hands, VRButton, XR, useXR } from '@react-three/xr';
+import { Controllers, Hands, Interactive, VRButton, XR, useXR } from '@react-three/xr';
 import { PerspectiveCamera, Text } from '@react-three/drei';
 import { Physics, RigidBody, RapierRigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
@@ -148,9 +148,117 @@ function ReactionTimelineUpdater({
   return null;
 }
 
-function XRWorldOffset({ children }: { children: React.ReactNode }) {
+function XRWorldOffset({ children, offsetZ }: { children: React.ReactNode; offsetZ: number }) {
   const { isPresenting } = useXR();
-  return <group position={isPresenting ? [0, 0, -2] : [0, 0, 0]}>{children}</group>;
+  return <group position={isPresenting ? [0, 0, offsetZ] : [0, 0, 0]}>{children}</group>;
+}
+
+function VRWorldNudgeControls({
+  offsetZ,
+  onSetOffsetZ,
+  open,
+  onToggle,
+}: {
+  offsetZ: number;
+  onSetOffsetZ: (next: number) => void;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const { isPresenting } = useXR();
+  const { camera } = useThree();
+  const rootRef = useRef<THREE.Group>(null);
+
+  const qFlip = useMemo(() => {
+    const q = new THREE.Quaternion();
+    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+    return q;
+  }, []);
+
+  const tmpOffset = useMemo(() => new THREE.Vector3(0.34, -0.22, -0.6), []);
+  const tmpPos = useMemo(() => new THREE.Vector3(), []);
+  const tmpQuat = useMemo(() => new THREE.Quaternion(), []);
+
+  useFrame(() => {
+    if (!rootRef.current) return;
+    if (!isPresenting) {
+      rootRef.current.visible = false;
+      return;
+    }
+
+    rootRef.current.visible = true;
+
+    tmpPos.copy(tmpOffset).applyQuaternion(camera.quaternion).add(camera.position);
+    rootRef.current.position.copy(tmpPos);
+
+    tmpQuat.copy(camera.quaternion).multiply(qFlip);
+    rootRef.current.quaternion.copy(tmpQuat);
+  });
+
+  if (!isPresenting) return null;
+
+  const clampOffsetZ = (v: number) => Math.min(-0.5, Math.max(-4, v));
+  const nudge = (dz: number) => onSetOffsetZ(clampOffsetZ(offsetZ + dz));
+
+  return (
+    <group ref={rootRef}>
+      <Interactive onSelectStart={onToggle}>
+        <group position={[0.15, 0, 0.012]}>
+          <mesh>
+            <boxGeometry args={[0.08, 0.08, 0.01]} />
+            <meshStandardMaterial color={open ? '#0ea5e9' : '#1f2937'} />
+          </mesh>
+          <Text position={[0, -0.004, 0.012]} fontSize={0.038} color="#e2e8f0" anchorX="center" anchorY="middle">
+            Z
+          </Text>
+        </group>
+      </Interactive>
+
+      {open && (
+        <group>
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[0.24, 0.11, 0.01]} />
+            <meshStandardMaterial color="#0b1220" transparent opacity={0.65} />
+          </mesh>
+
+          <Interactive onSelectStart={() => nudge(0.25)}>
+            <group position={[-0.07, 0, 0.012]}>
+              <mesh>
+                <boxGeometry args={[0.08, 0.08, 0.01]} />
+                <meshStandardMaterial color="#1f2937" />
+              </mesh>
+              <Text position={[0, -0.005, 0.012]} fontSize={0.05} color="#e2e8f0" anchorX="center" anchorY="middle">
+                +
+              </Text>
+            </group>
+          </Interactive>
+
+          <Interactive onSelectStart={() => nudge(-0.25)}>
+            <group position={[0.02, 0, 0.012]}>
+              <mesh>
+                <boxGeometry args={[0.08, 0.08, 0.01]} />
+                <meshStandardMaterial color="#1f2937" />
+              </mesh>
+              <Text position={[0, -0.005, 0.012]} fontSize={0.05} color="#e2e8f0" anchorX="center" anchorY="middle">
+                -
+              </Text>
+            </group>
+          </Interactive>
+
+          <Interactive onSelectStart={() => onSetOffsetZ(-2)}>
+            <group position={[0.11, 0, 0.012]}>
+              <mesh>
+                <boxGeometry args={[0.09, 0.08, 0.01]} />
+                <meshStandardMaterial color="#0f172a" />
+              </mesh>
+              <Text position={[0, -0.005, 0.012]} fontSize={0.03} color="#94a3b8" anchorX="center" anchorY="middle">
+                reset
+              </Text>
+            </group>
+          </Interactive>
+        </group>
+      )}
+    </group>
+  );
 }
 
 function DesktopOnlyCamera() {
@@ -262,6 +370,8 @@ export function Scene({ onInteract }: SceneProps) {
   const [sessionStarted, setSessionStarted] = useState(false);
   const [xrSupported, setXrSupported] = useState<boolean>(false);
   const [acidityReadings, setAcidityReadings] = useState<Record<string, number>>({});
+  const [worldOffsetZ, setWorldOffsetZ] = useState(-2);
+  const [worldNudgeOpen, setWorldNudgeOpen] = useState(false);
   const preparedAciditySamplesRef = useRef<Set<string>>(new Set());
   const dippedPhPaperTargetsRef = useRef<Set<string>>(new Set());
   const reactionStateRef = useRef<{
@@ -1311,9 +1421,16 @@ export function Scene({ onInteract }: SceneProps) {
               currentStepIndex={currentStepIndex}
               completeStep={completeStep}
             />
+
+            <VRWorldNudgeControls
+              offsetZ={worldOffsetZ}
+              onSetOffsetZ={setWorldOffsetZ}
+              open={worldNudgeOpen}
+              onToggle={() => setWorldNudgeOpen(v => !v)}
+            />
             
             <Physics gravity={[0, -9.81, 0]} timeStep={1/60} paused={false} interpolate={true}>
-            <XRWorldOffset>
+            <XRWorldOffset offsetZ={worldOffsetZ}>
 
             <XRDebugMarker />
 
