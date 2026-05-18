@@ -216,9 +216,9 @@ function VRWorldNudgeControls({
             <boxGeometry args={[0.14, 0.14, 0.01]} />
             <meshBasicMaterial color="#1f2937" depthTest={false} />
           </mesh>
-          <Text position={[0, -0.008, 0.012]} fontSize={0.09} color="#e2e8f0" anchorX="center" anchorY="middle">
+          <Text position={[0, -0.008, 0.02]} fontSize={0.09} anchorX="center" anchorY="middle" renderOrder={1000} frustumCulled={false}>
             +
-            <meshBasicMaterial depthTest={false} />
+            <meshBasicMaterial color="#e2e8f0" depthTest={false} toneMapped={false} />
           </Text>
         </group>
       </Interactive>
@@ -229,9 +229,9 @@ function VRWorldNudgeControls({
             <boxGeometry args={[0.14, 0.14, 0.01]} />
             <meshBasicMaterial color="#1f2937" depthTest={false} />
           </mesh>
-          <Text position={[0, -0.008, 0.012]} fontSize={0.09} color="#e2e8f0" anchorX="center" anchorY="middle">
+          <Text position={[0, -0.008, 0.02]} fontSize={0.09} anchorX="center" anchorY="middle" renderOrder={1000} frustumCulled={false}>
             -
-            <meshBasicMaterial depthTest={false} />
+            <meshBasicMaterial color="#e2e8f0" depthTest={false} toneMapped={false} />
           </Text>
         </group>
       </Interactive>
@@ -242,9 +242,9 @@ function VRWorldNudgeControls({
             <boxGeometry args={[0.18, 0.14, 0.01]} />
             <meshBasicMaterial color="#0f172a" depthTest={false} />
           </mesh>
-          <Text position={[0, -0.008, 0.012]} fontSize={0.055} color="#94a3b8" anchorX="center" anchorY="middle">
+          <Text position={[0, -0.008, 0.02]} fontSize={0.055} anchorX="center" anchorY="middle" renderOrder={1000} frustumCulled={false}>
             reset
-            <meshBasicMaterial depthTest={false} />
+            <meshBasicMaterial color="#94a3b8" depthTest={false} toneMapped={false} />
           </Text>
         </group>
       </Interactive>
