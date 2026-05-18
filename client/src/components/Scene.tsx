@@ -170,7 +170,7 @@ function VRWorldNudgeControls({
     return q;
   }, []);
 
-  const tmpOffset = useMemo(() => new THREE.Vector3(0.34, -0.22, -0.6), []);
+  const tmpOffset = useMemo(() => new THREE.Vector3(0, -0.28, -0.55), []);
   const tmpPos = useMemo(() => new THREE.Vector3(), []);
   const tmpQuat = useMemo(() => new THREE.Quaternion(), []);
 
@@ -198,18 +198,19 @@ function VRWorldNudgeControls({
   return (
     <group ref={rootRef}>
       <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[0.24, 0.11, 0.01]} />
-        <meshStandardMaterial color="#0b1220" transparent opacity={0.65} />
+        <boxGeometry args={[0.32, 0.14, 0.01]} />
+        <meshBasicMaterial color="#0b1220" transparent opacity={0.75} depthTest={false} />
       </mesh>
 
       <Interactive onSelectStart={() => nudge(0.25)}>
-        <group position={[-0.07, 0, 0.012]}>
+        <group position={[-0.1, 0, 0.012]}>
           <mesh>
-            <boxGeometry args={[0.08, 0.08, 0.01]} />
-            <meshStandardMaterial color="#1f2937" />
+            <boxGeometry args={[0.1, 0.1, 0.01]} />
+            <meshBasicMaterial color="#1f2937" depthTest={false} />
           </mesh>
-          <Text position={[0, -0.005, 0.012]} fontSize={0.05} color="#e2e8f0" anchorX="center" anchorY="middle">
+          <Text position={[0, -0.006, 0.012]} fontSize={0.065} color="#e2e8f0" anchorX="center" anchorY="middle">
             +
+            <meshBasicMaterial depthTest={false} />
           </Text>
         </group>
       </Interactive>
@@ -217,23 +218,25 @@ function VRWorldNudgeControls({
       <Interactive onSelectStart={() => nudge(-0.25)}>
         <group position={[0.02, 0, 0.012]}>
           <mesh>
-            <boxGeometry args={[0.08, 0.08, 0.01]} />
-            <meshStandardMaterial color="#1f2937" />
+            <boxGeometry args={[0.1, 0.1, 0.01]} />
+            <meshBasicMaterial color="#1f2937" depthTest={false} />
           </mesh>
-          <Text position={[0, -0.005, 0.012]} fontSize={0.05} color="#e2e8f0" anchorX="center" anchorY="middle">
+          <Text position={[0, -0.006, 0.012]} fontSize={0.065} color="#e2e8f0" anchorX="center" anchorY="middle">
             -
+            <meshBasicMaterial depthTest={false} />
           </Text>
         </group>
       </Interactive>
 
       <Interactive onSelectStart={() => onSetOffsetZ(-2)}>
-        <group position={[0.11, 0, 0.012]}>
+        <group position={[0.14, 0, 0.012]}>
           <mesh>
-            <boxGeometry args={[0.09, 0.08, 0.01]} />
-            <meshStandardMaterial color="#0f172a" />
+            <boxGeometry args={[0.12, 0.1, 0.01]} />
+            <meshBasicMaterial color="#0f172a" depthTest={false} />
           </mesh>
-          <Text position={[0, -0.005, 0.012]} fontSize={0.03} color="#94a3b8" anchorX="center" anchorY="middle">
+          <Text position={[0, -0.006, 0.012]} fontSize={0.04} color="#94a3b8" anchorX="center" anchorY="middle">
             reset
+            <meshBasicMaterial depthTest={false} />
           </Text>
         </group>
       </Interactive>
