@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Controllers, Hands, Interactive, VRButton, XR, useXR } from '@react-three/xr';
-import { PerspectiveCamera, Text } from '@react-three/drei';
+import { Hud, PerspectiveCamera, Text } from '@react-three/drei';
 import { Physics, RigidBody, RapierRigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
 import { LabRoom } from './canvas/LabRoom';
@@ -161,86 +161,59 @@ function VRWorldNudgeControls({
   onSetOffsetZ: (next: number) => void;
 }) {
   const { isPresenting } = useXR();
-  const { camera } = useThree();
-  const rootRef = useRef<THREE.Group>(null);
-
-  const qFlip = useMemo(() => {
-    const q = new THREE.Quaternion();
-    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
-    return q;
-  }, []);
-
-  const tmpOffset = useMemo(() => new THREE.Vector3(0, -0.28, -0.55), []);
-  const tmpPos = useMemo(() => new THREE.Vector3(), []);
-  const tmpQuat = useMemo(() => new THREE.Quaternion(), []);
-
-  useFrame(() => {
-    if (!rootRef.current) return;
-    if (!isPresenting) {
-      rootRef.current.visible = false;
-      return;
-    }
-
-    rootRef.current.visible = true;
-
-    tmpPos.copy(tmpOffset).applyQuaternion(camera.quaternion).add(camera.position);
-    rootRef.current.position.copy(tmpPos);
-
-    tmpQuat.copy(camera.quaternion).multiply(qFlip);
-    rootRef.current.quaternion.copy(tmpQuat);
-  });
-
   if (!isPresenting) return null;
 
   const clampOffsetZ = (v: number) => Math.min(-0.5, Math.max(-4, v));
   const nudge = (dz: number) => onSetOffsetZ(clampOffsetZ(offsetZ + dz));
 
   return (
-    <group ref={rootRef}>
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[0.32, 0.14, 0.01]} />
-        <meshBasicMaterial color="#0b1220" transparent opacity={0.75} depthTest={false} />
-      </mesh>
+    <Hud renderPriority={10}>
+      <group position={[0, -0.35, -1]} renderOrder={999}>
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[0.52, 0.18, 0.01]} />
+          <meshBasicMaterial color="#0b1220" transparent opacity={0.8} depthTest={false} />
+        </mesh>
 
-      <Interactive onSelectStart={() => nudge(0.25)}>
-        <group position={[-0.1, 0, 0.012]}>
-          <mesh>
-            <boxGeometry args={[0.1, 0.1, 0.01]} />
-            <meshBasicMaterial color="#1f2937" depthTest={false} />
-          </mesh>
-          <Text position={[0, -0.006, 0.012]} fontSize={0.065} color="#e2e8f0" anchorX="center" anchorY="middle">
-            +
-            <meshBasicMaterial depthTest={false} />
-          </Text>
-        </group>
-      </Interactive>
+        <Interactive onSelectStart={() => nudge(0.25)}>
+          <group position={[-0.16, 0, 0.012]}>
+            <mesh>
+              <boxGeometry args={[0.14, 0.14, 0.01]} />
+              <meshBasicMaterial color="#1f2937" depthTest={false} />
+            </mesh>
+            <Text position={[0, -0.008, 0.012]} fontSize={0.09} color="#e2e8f0" anchorX="center" anchorY="middle">
+              +
+              <meshBasicMaterial depthTest={false} />
+            </Text>
+          </group>
+        </Interactive>
 
-      <Interactive onSelectStart={() => nudge(-0.25)}>
-        <group position={[0.02, 0, 0.012]}>
-          <mesh>
-            <boxGeometry args={[0.1, 0.1, 0.01]} />
-            <meshBasicMaterial color="#1f2937" depthTest={false} />
-          </mesh>
-          <Text position={[0, -0.006, 0.012]} fontSize={0.065} color="#e2e8f0" anchorX="center" anchorY="middle">
-            -
-            <meshBasicMaterial depthTest={false} />
-          </Text>
-        </group>
-      </Interactive>
+        <Interactive onSelectStart={() => nudge(-0.25)}>
+          <group position={[0, 0, 0.012]}>
+            <mesh>
+              <boxGeometry args={[0.14, 0.14, 0.01]} />
+              <meshBasicMaterial color="#1f2937" depthTest={false} />
+            </mesh>
+            <Text position={[0, -0.008, 0.012]} fontSize={0.09} color="#e2e8f0" anchorX="center" anchorY="middle">
+              -
+              <meshBasicMaterial depthTest={false} />
+            </Text>
+          </group>
+        </Interactive>
 
-      <Interactive onSelectStart={() => onSetOffsetZ(-2)}>
-        <group position={[0.14, 0, 0.012]}>
-          <mesh>
-            <boxGeometry args={[0.12, 0.1, 0.01]} />
-            <meshBasicMaterial color="#0f172a" depthTest={false} />
-          </mesh>
-          <Text position={[0, -0.006, 0.012]} fontSize={0.04} color="#94a3b8" anchorX="center" anchorY="middle">
-            reset
-            <meshBasicMaterial depthTest={false} />
-          </Text>
-        </group>
-      </Interactive>
-    </group>
+        <Interactive onSelectStart={() => onSetOffsetZ(-2)}>
+          <group position={[0.2, 0, 0.012]}>
+            <mesh>
+              <boxGeometry args={[0.18, 0.14, 0.01]} />
+              <meshBasicMaterial color="#0f172a" depthTest={false} />
+            </mesh>
+            <Text position={[0, -0.008, 0.012]} fontSize={0.055} color="#94a3b8" anchorX="center" anchorY="middle">
+              reset
+              <meshBasicMaterial depthTest={false} />
+            </Text>
+          </group>
+        </Interactive>
+      </group>
+    </Hud>
   );
 }
 
